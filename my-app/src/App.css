@@ -40,3 +40,79 @@
 .read-the-docs {
   color: #888;
 }
+
+.timer-box {
+  border: 4px solid #00bfff;
+  border-radius: 18px;
+  padding: 24px 18px 18px 18px;
+  margin: 18px;
+  display: inline-block;
+  min-width: 160px;
+  min-height: 180px;
+  background: #181f2a;
+  color: #fff;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 0 16px #00bfff55;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.timer-red {
+  border-color: #ff3b3b !important;
+  box-shadow: 0 0 16px #ff3b3b55;
+}
+
+.timer-box h2 {
+  font-size: 3.2rem;
+  font-weight: bold;
+  margin: 24px 0 18px 0;
+  letter-spacing: 2px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.6rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn {
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 8px 22px;
+  margin: 0 6px 0 0;
+  border: none;
+  transition: background 0.2s;
+}
+
+.btn-warning {
+  background: #00bfff;
+  color: #fff;
+}
+
+.btn-info {
+  background: #00bfff;
+  color: #fff;
+}
+
+.timer-red .btn-warning,
+.timer-red .btn-info {
+  background: #ff3b3b !important;
+  color: #fff !important;
+}
+
+.btn-warning:hover,
+.btn-info:hover {
+  background: #0099cc;
+}
+
+.timer-red .btn-warning:hover,
+.timer-red .btn-info:hover {
+  background: #d32f2f !important;
+}

@@ -1,87 +1,46 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Navbar, Nav, Container } from "react-bootstrap";
-import "./app.css";
 import "./style.css";
+import Timer from './Timer';
 
 function App() {
-  const [count, setCount] = useState(0);
-  const [name, setName] = useState("");
-  const navigate = useNavigate();
+  const [timers, setTimers] = useState([]);
+  const [inputValue, setInputValue] = useState('');
 
-  function handleInc() {
-    setCount(count + 1);
-  }
+  const addTimer = () => {
+    const time = parseInt(inputValue);
+    if (!isNaN(time) && time >= 0) {
+      setTimers([...timers, { id: Date.now(), time }]);
+      setInputValue('');
+    }
+  };
 
-  function handleInputChange(e) {
-    setCount(Number(e.target.value) || 0);
-  }
-
-  const handleDec = () => {
-    setCount(count - 1);
+  const removeTimer = (id) => {
+    setTimers(timers.filter((t) => t.id !== id));
   };
 
   return (
-    <>
-      <Navbar bg="dark" variant="dark" expand="lg">
-        <Container>
-          <Navbar.Brand as={Link} to="/">ReactFirst</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <Nav.Link as={Link} to="/">Home</Nav.Link>
-              <Nav.Link as={Link} to="/timer">Timer</Nav.Link>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-      <div className="image-container">
-        <img src="./src/images/Full_image_of_Tung_Tung_Tung_Sahur-removebg-preview.png" alt="Profile" />
-      </div>
-      <form>
-        <h5>Your name: {name}</h5>
+    <div className="container text-center mt-5">
+      <div className="input-box mb-4 d-flex justify-content-center p-3">
         <input
-          type="text"
-          onChange={(e) => setName(e.target.value)}
-          style={{
-            display: count > 10 ? "none" : "block",
-            marginBottom: "20px",
-            padding: "10px",
-            fontSize: "16px",
-          }}
-          placeholder="Enter your name"
+          type="number"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          className="form-control me-2 custom-input"
+          placeholder="0"
         />
-      </form>
-      <h1
-        className="counting"
-        style={{
-          color: count > 10 ? "blue" : count < 0 ? "yellow" : "white",
-          backgroundColor: "black",
-          fontSize: "50px",
-          textAlign: "center",
-        }}
-      >
-        Count: {count}
-      </h1>
-      <div className="button-container">
-        <button onClick={handleDec} className="dec-button">Decrease</button>
-        <button onClick={handleInc} className="inc-button">Increase</button>
+        <button onClick={addTimer} className="btn btn-primary">
+          Add Timer
+        </button>
       </div>
-      <input
-        type="number"
-        value={count}
-        onChange={handleInputChange}
-        className="count-input"
-        style={{
-          width: "100px",
-          height: "50px",
-          fontSize: "24px",
-          textAlign: "center",
-          marginTop: "20px",
-        }}
-      />
-      <button onClick={() => navigate("/timer")}>Go to Timer</button>
-    </>
+
+      <div className="d-flex flex-wrap justify-content-center gap-4">
+        {timers.map((timer) => (
+          <Timer key={timer.id} initialTime={timer.time} onRemove={() => removeTimer(timer.id)} />
+        ))}
+      </div>
+    </div>
   );
 }
 
