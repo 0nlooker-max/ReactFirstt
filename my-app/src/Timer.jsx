@@ -30,16 +30,18 @@ function Timer({ initialTime, onRemove }) {
     setIsPaused(false);
   };
 
-  return (
+   return (
     <div className={`timer-box ${timeLeft === 0 ? 'timer-red' : ''}`}>
       <button className="close-btn" onClick={onRemove}>×</button>
       <h2>{timeLeft}</h2>
-      <button className="btn btn-warning me-2" onClick={pauseTimer}>
-        {isPaused ? 'Resume' : 'Pause'}
-      </button>
-      <button className="btn btn-info" onClick={resetTimer}>
-        Reset
-      </button>
+       <div className="timer-btn-group">
+        <button className="btn btn-warning" onClick={pauseTimer}>
+          {isPaused ? 'Resume' : 'Pause'}
+        </button>
+        <button className="btn btn-info" onClick={resetTimer}>
+          Reset
+        </button>
+      </div>
     </div>
   );
 }
