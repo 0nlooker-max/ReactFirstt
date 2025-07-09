@@ -1,8 +1,6 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Navbar, Nav, Container } from "react-bootstrap";
+import React, { useState, useRef, useEffect } from "react";
+import { Container, Row, Col, Button, Form } from "react-bootstrap";
 import "./style.css";
-import Timer from './Timer';
 
 function App() {
   const [timers, setTimers] = useState([]);
@@ -21,24 +19,68 @@ function App() {
   };
 
   return (
-    <div className="container text-center mt-5">
-      <div className="input-box mb-4 d-flex justify-content-center p-3">
-        <input
+    <Container className="text-center mt-5">
+      {/* Input Section */}
+      <div className="input-box mb-4 d-flex justify-content-center p-3 mx-auto">
+        <Form.Control
           type="number"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="form-control me-2 custom-input"
+          className="me-2 custom-input"
           placeholder="0"
         />
-        <button onClick={addTimer} className="btn btn-primary">
+        <Button onClick={addTimer} variant="primary">
           Add Timer
-        </button>
+        </Button>
       </div>
 
-      <div className="d-flex flex-wrap justify-content-center gap-4">
+      {/* Timer Cards */}
+      <Row className="justify-content-center gap-3">
         {timers.map((timer) => (
-          <Timer key={timer.id} initialTime={timer.time} onRemove={() => removeTimer(timer.id)} />
+          <Col key={timer.id} xs="auto">
+            <TimerCard initialTime={timer.time} onRemove={() => removeTimer(timer.id)} />
+          </Col>
         ))}
+      </Row>
+    </Container>
+  );
+}
+
+function TimerCard({ initialTime, onRemove }) {
+  const [timeLeft, setTimeLeft] = useState(initialTime);
+  const [isPaused, setIsPaused] = useState(false);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (!isPaused && timeLeft > 0) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    }
+
+    return () => clearInterval(intervalRef.current);
+  }, [isPaused, timeLeft]);
+
+  const pauseTimer = () => {
+    setIsPaused((prev) => !prev);
+  };
+
+  const resetTimer = () => {
+    setTimeLeft(initialTime);
+    setIsPaused(false);
+  };
+
+  return (
+    <div className={`timer-box ${timeLeft === 0 ? 'timer-red' : ''}`}>
+      <button className="close-btn" onClick={onRemove}>×</button>
+      <h2>{timeLeft}</h2>
+      <div className="timer-btn-group">
+        <button className="btn btn-warning" onClick={pauseTimer}>
+          {isPaused ? 'Resume' : 'Pause'}
+        </button>
+        <button className="btn btn-info" onClick={resetTimer}>
+          Reset
+        </button>
       </div>
     </div>
   );

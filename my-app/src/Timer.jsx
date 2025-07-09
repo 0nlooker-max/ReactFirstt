@@ -1,49 +1,61 @@
-import React from "react";
-import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Container, Row, Col, Button, Card } from "react-bootstrap";
-import "./app.css";
+import React, { useState } from "react";
+import { Container, Row, Col, Button, Form } from "react-bootstrap";
 import "./style.css";
 
+function App() {
 
-function Timer({ initialTime, onRemove }) {
-  const [timeLeft, setTimeLeft] = useState(initialTime);
-  const [isPaused, setIsPaused] = useState(false);
-  const intervalRef = useRef(null);
 
-  useEffect(() => {
-    if (!isPaused && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    }
+  return (
+    <Container className="text-center mt-5">
+      <div className="container text-center mt-5">
+        {/* Input Box */}
+        <div className="input-box mb-4 d-flex justify-content-center p-3 mx-auto">
+          <input
+            type="number"
+            className="form-control me-2 custom-input"
+            placeholder="0"
+          />
+          <button className="btn btn-primary">Add Timer</button>
+        </div>
 
-    return () => clearInterval(intervalRef.current);
-  }, [isPaused, timeLeft]);
+        {/* Timer Cards with Buttons (UI Only) */}
+        <div className="row justify-content-center gap-3">
+          <div className="col-auto">
+            <div className="timer-box">
+              <button className="close-btn">×</button>
+              <h2>30</h2>
+              <div className="timer-btn-group">
+                <button className="btn btn-warning">Pause</button>
+                <button className="btn btn-info">Reset</button>
+              </div>
+            </div>
+          </div>
 
-  const pauseTimer = () => {
-    setIsPaused((prev) => !prev);
-  };
+          <div className="col-auto">
+            <div className="timer-box">
+              <button className="close-btn">×</button>
+              <h2>45</h2>
+              <div className="timer-btn-group">
+                <button className="btn btn-warning">Pause</button>
+                <button className="btn btn-info">Reset</button>
+              </div>
+            </div>
+          </div>
 
-  const resetTimer = () => {
-    setTimeLeft(initialTime);
-    setIsPaused(false);
-  };
-
-   return (
-    <div className={`timer-box ${timeLeft === 0 ? 'timer-red' : ''}`}>
-      <button className="close-btn" onClick={onRemove}>×</button>
-      <h2>{timeLeft}</h2>
-       <div className="timer-btn-group">
-        <button className="btn btn-warning" onClick={pauseTimer}>
-          {isPaused ? 'Resume' : 'Pause'}
-        </button>
-        <button className="btn btn-info" onClick={resetTimer}>
-          Reset
-        </button>
+          <div className="col-auto">
+            <div className="timer-box">
+              <button className="close-btn">×</button>
+              <h2>60</h2>
+              <div className="timer-btn-group">
+                <button className="btn btn-warning ">Pause</button>
+                <button className="btn btn-info">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </Container>
   );
 }
 
-export default Timer;
+export default App;
