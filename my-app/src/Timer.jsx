@@ -1,61 +1,54 @@
 import React, { useState } from "react";
-import { Container, Row, Col, Button, Form } from "react-bootstrap";
+import { Container, Row, Col, Form, Button, Nav } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import TimerCard from "./components/timercard";
 import "./style.css";
 
-function App() {
+function Timer() {
+  const [timers, setTimers] = useState([]);
+  const [inputValue, setInputValue] = useState("");
 
+  const addTimer = () => {
+    const time = parseInt(inputValue);
+    if (!isNaN(time) && time >= 0) {
+      setTimers([...timers, { id: Date.now(), time }]);
+      setInputValue("");
+    }
+  };
+
+  const removeTimer = (id) => {
+    setTimers(timers.filter((t) => t.id !== id));
+  };
 
   return (
     <Container className="text-center mt-5">
-      <div className="container text-center mt-5">
-        {/* Input Box */}
-        <div className="input-box mb-4 d-flex justify-content-center p-3 mx-auto">
-          <input
-            type="number"
-            className="form-control me-2 custom-input"
-            placeholder="0"
-          />
-          <button className="btn btn-primary">Add Timer</button>
-        </div>
-
-        {/* Timer Cards with Buttons (UI Only) */}
-        <div className="row justify-content-center gap-3">
-          <div className="col-auto">
-            <div className="timer-box">
-              <button className="close-btn">×</button>
-              <h2>30</h2>
-              <div className="timer-btn-group">
-                <button className="btn btn-warning">Pause</button>
-                <button className="btn btn-info">Reset</button>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-auto">
-            <div className="timer-box">
-              <button className="close-btn">×</button>
-              <h2>45</h2>
-              <div className="timer-btn-group">
-                <button className="btn btn-warning">Pause</button>
-                <button className="btn btn-info">Reset</button>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-auto">
-            <div className="timer-box">
-              <button className="close-btn">×</button>
-              <h2>60</h2>
-              <div className="timer-btn-group">
-                <button className="btn btn-warning ">Pause</button>
-                <button className="btn btn-info">Reset</button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="navbox">
+        <Nav.Link as={Link} to="/">HOME</Nav.Link>
       </div>
+
+      <div className="input-box mb-4 d-flex justify-content-center p-3 mx-auto">
+        <Form.Control
+          type="number"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          className="me-2 custom-input"
+          placeholder="0"
+        />
+        <Button onClick={addTimer} variant="primary">Add Timer</Button>
+      </div>
+
+      <Row className="justify-content-center gap-3">
+        {timers.map((timer) => (
+          <Col key={timer.id} xs="auto">
+            <TimerCard
+              initialTime={timer.time}
+              onRemove={() => removeTimer(timer.id)}
+            />
+          </Col>
+        ))}
+      </Row>
     </Container>
   );
 }
 
-export default App;
+export default Timer;

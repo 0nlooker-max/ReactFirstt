@@ -12,7 +12,7 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} />
-        <Route path="/time" element={<Timer />} />
+        <Route path="/timer" element={<Timer />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>

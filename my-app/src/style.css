@@ -1,11 +1,19 @@
 /* src/style.css */
-
+*{
+  background-color: #000000;
+}
 body {
   background-color: #000; /* dark background like in your image */
   color: rgb(201, 185, 185);
   font-family: Arial, sans-serif;
 }
-
+.navbox {
+  background-color: #222;
+  font-family: 'Times New Roman', Times, serif;
+  color: #fff;
+  padding: 10px;
+}
+.name
 .container {
   display: flex;
   flex-direction: column;
@@ -23,7 +31,7 @@ body {
   padding: 20px;
   width: 150px;
   position: relative;
-  background-color: #803030;
+  background-color: #000000;
   color: white;
   text-align: center;
   box-shadow: 0 0 15px #00bfff;

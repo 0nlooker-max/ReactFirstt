@@ -1,88 +1,76 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Container, Row, Col, Button, Form } from "react-bootstrap";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Navbar, Nav, Container } from "react-bootstrap";
+import "./app.css";
 import "./style.css";
 
 function App() {
-  const [timers, setTimers] = useState([]);
-  const [inputValue, setInputValue] = useState('');
+  const [count, setCount] = useState(0);
+  const [name, setName] = useState("");
 
-  const addTimer = () => {
-    const time = parseInt(inputValue);
-    if (!isNaN(time) && time >= 0) {
-      setTimers([...timers, { id: Date.now(), time }]);
-      setInputValue('');
-    }
-  };
+  function handleInc() {
+    setCount(count + 1);
+  }
 
-  const removeTimer = (id) => {
-    setTimers(timers.filter((t) => t.id !== id));
+  function handleInputChange(e) {
+    setCount(Number(e.target.value) || 0);
+  }
+
+  const handleDec = () => {
+    setCount(count - 1);
   };
 
   return (
-    <Container className="text-center mt-5">
-      {/* Input Section */}
-      <div className="input-box mb-4 d-flex justify-content-center p-3 mx-auto">
-        <Form.Control
-          type="number"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          className="me-2 custom-input"
-          placeholder="0"
+    <>
+      <div className="navbox"><Nav.Link as={Link} to="/timer">Timer</Nav.Link></div>
+      <div className="image-container">
+        <img src="./src/images/Full_image_of_Tung_Tung_Tung_Sahur-removebg-preview.png" alt="Profile" />
+      </div>
+      <form>
+        <h5 >Your name: {name}</h5>
+        <input
+          className="name"
+          type="text"
+          onChange={(e) => setName(e.target.value)}
+          style={{
+            display: count > 10 ? "none" : "block",
+            marginBottom: "20px",
+            padding: "10px",
+            fontSize: "16px",
+          }}
+          placeholder="Enter your name"
         />
-        <Button onClick={addTimer} variant="primary">
-          Add Timer
-        </Button>
+      </form>
+      <h1
+        className="counting"
+        style={{
+          color: count > 10 ? "blue" : count < 0 ? "yellow" : "white",
+          backgroundColor: "black",
+          fontSize: "50px",
+          textAlign: "center",
+        }}
+      >
+        Count: {count}
+      </h1>
+      <div className="button-container">
+        <button onClick={handleDec} className="dec-button">Decrease</button>
+        <button onClick={handleInc} className="inc-button">Increase</button>
       </div>
-
-      {/* Timer Cards */}
-      <Row className="justify-content-center gap-3">
-        {timers.map((timer) => (
-          <Col key={timer.id} xs="auto">
-            <TimerCard initialTime={timer.time} onRemove={() => removeTimer(timer.id)} />
-          </Col>
-        ))}
-      </Row>
-    </Container>
-  );
-}
-
-function TimerCard({ initialTime, onRemove }) {
-  const [timeLeft, setTimeLeft] = useState(initialTime);
-  const [isPaused, setIsPaused] = useState(false);
-  const intervalRef = useRef(null);
-
-  useEffect(() => {
-    if (!isPaused && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    }
-
-    return () => clearInterval(intervalRef.current);
-  }, [isPaused, timeLeft]);
-
-  const pauseTimer = () => {
-    setIsPaused((prev) => !prev);
-  };
-
-  const resetTimer = () => {
-    setTimeLeft(initialTime);
-    setIsPaused(false);
-  };
-
-  return (
-    <div className={`timer-box ${timeLeft === 0 ? 'timer-red' : ''}`}>
-      <button className="close-btn" onClick={onRemove}>×</button>
-      <h2>{timeLeft}</h2>
-      <div className="timer-btn-group">
-        <button className="btn btn-warning" onClick={pauseTimer}>
-          {isPaused ? 'Resume' : 'Pause'}
-        </button>
-        <button className="btn btn-info" onClick={resetTimer}>
-          Reset
-        </button>
-      </div>
-    </div>
+      <input
+        type="number"
+        value={count}
+        onChange={handleInputChange}
+        className="count-input"
+        style={{
+          width: "100px",
+          height: "50px",
+          fontSize: "24px",
+          textAlign: "center",
+          marginTop: "20px",
+        }}
+      />
+      
+    </>
   );
 }
 
