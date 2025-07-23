@@ -3,7 +3,7 @@ import { Header } from './components/Header';
 import { Sidebar } from './components/SideBar';
 import { ProductGrid } from './components/ProductGrid';
 import { FilterBar } from './components/Filterbar';
-import { useProducts } from './hooks/useProducts';
+import { useProducts } from './hooks/useProduct';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
