@@ -3,7 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, User, Menu, Bell } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 
-export const Header = ({ searchQuery, onSearchChange, onMenuToggle }) => {
+interface HeaderProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  onMenuToggle: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange, onMenuToggle }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const { getTotalItems } = useCart();
   const navigate = useNavigate();

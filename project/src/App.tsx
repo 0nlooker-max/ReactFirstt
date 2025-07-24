@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header } from './components/Header';
 import { HomePage } from './pages/HomePage';
-import { ProductDetailPage } from './pages/ProductDeatailPage';
+import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { CartProvider } from './contexts/CartContext';
-import { useProducts } from './hooks/useProduct';
+import { useProducts } from './hooks/useProducts';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
