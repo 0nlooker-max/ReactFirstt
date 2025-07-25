@@ -8,6 +8,7 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { CartProvider } from './contexts/CartContext';
 import { useProducts } from './hooks/useProduct';
+import { ProductList } from './components/ProductList';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -33,6 +34,8 @@ function App() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/addproduct" element={<ProductList />} />
+           
           </Routes>
         </div>
       </Router>
