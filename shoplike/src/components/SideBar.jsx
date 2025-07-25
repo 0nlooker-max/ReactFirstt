@@ -1,12 +1,13 @@
-import React from 'react';
-import { X } from 'lucide-react';
-import { categories } from '../data/products';
+import React from "react";
+import { X } from "lucide-react";
+import { categories } from "../data/products";
+import { Link } from "react-router-dom";
 
 export const Sidebar = ({
   selectedCategory,
   onCategoryChange,
   isOpen,
-  onClose
+  onClose,
 }) => {
   return (
     <>
@@ -19,13 +20,15 @@ export const Sidebar = ({
       )}
 
       {/* Sidebar */}
-      <aside className={`
+      <aside
+        className={`
         fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-screen lg:h-auto
         w-72 lg:w-64 bg-white shadow-lg lg:shadow-none
         transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         lg:mt-0 overflow-y-auto
-      `}>
+      `}
+      >
         <div className="p-4 lg:p-6">
           {/* Mobile close button */}
           <div className="flex justify-between items-center mb-6 lg:hidden">
@@ -36,6 +39,14 @@ export const Sidebar = ({
             >
               <X size={24} />
             </button>
+          </div>
+
+          <div className="flex justify-between items-center mb-6 bg-white rounded shadow-md p-2">
+            <span className="text-gray-600 text-sm hover:text-gray-900 transition duration-300 ease-in-out text-size-14">
+              <Link to="/addproduct" className="underline hover:no-underline">
+                <span className="font-medium">Add Product</span>
+              </Link>
+            </span>
           </div>
 
           {/* Desktop title */}
@@ -55,18 +66,21 @@ export const Sidebar = ({
                 className={`
                   w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left
                   transition-all duration-200 group
-                  ${selectedCategory === category.id
-                    ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-500'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  ${
+                    selectedCategory === category.id
+                      ? "bg-orange-50 text-orange-600 border-l-4 border-orange-500"
+                      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                   }
                 `}
               >
                 <span className="text-xl">{category.icon}</span>
-                <span className={`
+                <span
+                  className={`
                   font-medium transition-all duration-200
-                  ${selectedCategory === category.id ? 'font-semibold' : ''}
+                  ${selectedCategory === category.id ? "font-semibold" : ""}
                   group-hover:translate-x-1
-                `}>
+                `}
+                >
                   {category.name}
                 </span>
               </button>

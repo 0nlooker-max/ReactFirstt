@@ -8,6 +8,7 @@ export const categories = [
     { id: 'books', name: 'Books & Media', icon: '📚' },
     { id: 'toys', name: 'Toys & Games', icon: '🎮' },
     { id: 'automotive', name: 'Automotive', icon: '🚗' }
+    
   ];
   
   export const products = [

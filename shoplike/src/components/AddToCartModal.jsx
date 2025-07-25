@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Plus, Minus, ShoppingCart, Check } from 'lucide-react';
-import { Product } from '../data/products';
+import { products } from '../data/products';
 import { useCart } from '../contexts/CartContext';
 
 export const AddToCartModal = ({

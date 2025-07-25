@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { products as allProducts, Product } from '../data/products';
+import { products as allProducts, products } from '../data/products';
 
 export const useProducts = () => {
   const [searchQuery, setSearchQuery] = useState('');
