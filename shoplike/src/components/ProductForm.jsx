@@ -1,29 +1,65 @@
-import { useState, useEffect } from 'react';
-import { createProduct, updateProduct } from '../services/productService';
+import { useState, useEffect } from "react";
+import { createProduct, updateProduct } from "../services/productService";
 
 export function ProductForm({ existing, onSaved }) {
   const [form, setForm] = useState({
-    id: '',
-    name: '',
-    price: '',
-    originalPrice: '',
-    image: '',
-    rating: '',
-    reviewCount: '',
-    category: '',
-    badge: '',
-    seller: '',
-    location: ''
+    name: "",
+    imageUrl: "",
+    badge: "",
+    discount: "",
+    price: "",
+    originalPrice: "",
+    rating: "",
+    reviewCount: "",
+    category: "",
+    seller: "",
+    location: "",
+    description: "",
+    details: "",
   });
 
   useEffect(() => {
-    if (existing) setForm(existing);
+    if (existing) {
+      setForm({
+        name: existing.name || "",
+        imageUrl: existing.imageUrl || "",
+        badge: existing.badge || "",
+        discount: existing.discount || "",
+        price: existing.price || "",
+        originalPrice: existing.originalPrice || "",
+        rating: existing.rating || "",
+        reviewCount: existing.reviewCount || "",
+        category: existing.category || "",
+        seller: existing.seller || "",
+        location: existing.location || "",
+        description: existing.description || "",
+        details: existing.details || "",
+      });
+    } else {
+      setForm({
+        name: "",
+        imageUrl: "",
+        badge: "",
+        discount: "",
+        price: "",
+        originalPrice: "",
+        rating: "",
+        reviewCount: "",
+        category: "",
+        seller: "",
+        location: "",
+        description: "",
+        details: "",
+      });
+    }
   }, [existing]);
 
-  const handleChange = e =>
-    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (existing) {
       await updateProduct(existing.id, form);
@@ -32,120 +68,95 @@ export function ProductForm({ existing, onSaved }) {
     }
     onSaved();
     setForm({
-      id: '',
-      name: '',
-      price: '',
-      originalPrice: '',
-      image: '',
-      rating: '',
-      reviewCount: '',
-      category: '',
-      badge: '',
-      seller: '',
-      location: ''
+      name: "",
+      imageUrl: "",
+      badge: "",
+      discount: "",
+      price: "",
+      originalPrice: "",
+      rating: "",
+      reviewCount: "",
+      category: "",
+      seller: "",
+      location: "",
+      description: "",
+      details: "",
     });
   };
 
+  const fields = [
+    ["name", "Product Name"],
+    ["imageUrl", "Image URL"],
+    ["badge", "Badge (e.g., Best Seller)"],
+    ["discount", "Discount (%)"],
+    ["price", "Price"],
+    ["originalPrice", "Original Price"],
+    ["rating", "Rating"],
+    ["reviewCount", "Review Count"],
+    ["category", "Category"],
+    ["seller", "Seller"],
+    ["location", "Location"],
+  ];
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="p-6 bg-white shadow-md rounded-lg space-y-4 max-w-3xl mx-auto"
-    >
-      <div className="grid grid-cols-2 gap-4">
-        <input
-          name="id"
-          placeholder="Product ID"
-          value={form.id}
+    <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-md">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {fields.map(([field, label]) => (
+          <div key={field}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {label}
+            </label>
+            <input
+              type={
+                ["price", "originalPrice", "discount", "rating", "reviewCount"].includes(field)
+                  ? "number"
+                  : "text"
+              }
+              name={field}
+              value={form[field]}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              required={field !== "badge"}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Description
+        </label>
+        <textarea
+          name="description"
+          value={form.description}
           onChange={handleChange}
+          className="w-full p-2 border rounded"
+          rows="3"
           required
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="name"
-          placeholder="Product Name"
-          value={form.name}
-          onChange={handleChange}
-          required
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="price"
-          type="number"
-          placeholder="Price"
-          value={form.price}
-          onChange={handleChange}
-          required
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="originalPrice"
-          type="number"
-          placeholder="Original Price"
-          value={form.originalPrice}
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="rating"
-          type="number"
-          step="0.1"
-          placeholder="Rating"
-          value={form.rating}
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="reviewCount"
-          type="number"
-          placeholder="Review Count"
-          value={form.reviewCount}
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="category"
-          placeholder="Category"
-          value={form.category}
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="badge"
-          placeholder="Badge (e.g. Best Seller)"
-          value={form.badge}
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="seller"
-          placeholder="Seller"
-          value={form.seller}
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="location"
-          placeholder="Location"
-          value={form.location}
-          onChange={handleChange}
-          className="border p-2 rounded w-full"
         />
       </div>
 
-      <input
-        name="image"
-        placeholder="Image URL"
-        value={form.image}
-        onChange={handleChange}
-        className="border p-2 rounded w-full"
-      />
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Details
+        </label>
+        <textarea
+          name="details"
+          value={form.details}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+          rows="3"
+        />
+      </div>
 
-      <button
-        type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        {existing ? 'Update Product' : 'Create Product'}
-      </button>
+      <div className="mt-6 text-right">
+        <button
+          type="submit"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          {existing ? "Update Product" : "Create Product"}
+        </button>
+      </div>
     </form>
   );
 }
