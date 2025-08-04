@@ -4,6 +4,7 @@ import { ProductGrid } from '../components/ProductGrid';
 import { FilterBar } from '../components/FilterBar';
 import { AddToCartModal } from '../components/AddToCartModal';
 import { useProducts } from '../hooks/useProduct';
+import "../assets/global.css";
 
 export const HomePage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
