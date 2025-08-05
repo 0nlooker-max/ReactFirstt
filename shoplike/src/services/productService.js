@@ -34,3 +34,10 @@ import {
     const ref = doc(db, 'products', id);
     await deleteDoc(ref);
   }
+
+  export async function getProduct(id) {
+  const ref = doc(db, 'products', id);
+  const snapshot = await getDocs(productsCol);
+  const match = snapshot.docs.find(doc => doc.id === id);
+  return match ? { id: match.id, ...match.data() } : null;
+}
