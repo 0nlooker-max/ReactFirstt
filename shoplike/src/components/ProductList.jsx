@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAllProducts, deleteProduct } from "../services/productService";
 import { ProductForm } from "./ProductForm";
-import "../assets/addprdct/list.css";
 
 export function ProductList() {
   const [products, setProducts] = useState([]);
@@ -31,10 +30,10 @@ export function ProductList() {
   };
 
   return (
-    <div className="container">
-      <h2 className="section-title">{editing ? "Edit Product" : "New Product"}</h2>
+    <div className="container py-4">
+      <h2 className="mb-4">{editing ? "Edit Product" : "New Product"}</h2>
 
-      <div className="card form-card">
+      <div className="card mb-5 p-4 shadow-sm">
         <ProductForm
           existing={editing}
           onSaved={() => {
@@ -44,98 +43,132 @@ export function ProductList() {
         />
       </div>
 
-      <h2 className="subsection-title">All Products</h2>
+      <h3 className="mb-4">All Products</h3>
 
       {loading ? (
-        <div className="status-message">Loading products...</div>
+        <div className="alert alert-info">Loading products...</div>
       ) : products.length === 0 ? (
-        <div className="status-message">No products found.</div>
+        <div className="alert alert-warning">No products found.</div>
       ) : (
-        <div className="product-list-wrapper">
-          <ul className="product-list">
-            {products.map((p) => {
-              const imageSrc = p.image || p.imageUrl || "";
-              const discount = calculateDiscount(p.price, p.originalPrice);
+        <div className="d-flex flex-wrap justify-content-start gap-4">
+          {products.map((p) => {
+            const imageSrc = p.image || p.imageUrl || "";
+            const discount = calculateDiscount(p.price, p.originalPrice);
 
-              return (
-                <li key={p.id} className="product-item">
-                  <div className="image-wrapper">
-                    {imageSrc ? (
-                      <img
-                        src={imageSrc}
-                        alt={p.name}
-                        className="product-image"
-                      />
-                    ) : (
-                      <span className="no-image">No Image</span>
-                    )}
+            return (
+              <div
+                key={p.id}
+                className="card shadow-sm"
+                style={{
+                  width: "280px",
+                  maxHeight: "520px",
+                  marginBottom: "20px",
+                }}
+              >
+                {imageSrc ? (
+                  <img
+                    src={imageSrc}
+                    alt={p.name}
+                    className="card-img-top"
+                    style={{ height: "180px", objectFit: "cover" }}
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.png";
+                    }}
+                  />
+                ) : (
+                  <div
+                    className="bg-light text-center d-flex align-items-center justify-content-center"
+                    style={{ height: "180px" }}
+                  >
+                    <span className="text-muted">No Image</span>
                   </div>
+                )}
 
-                  <div className="product-content">
-                    <h3 className="product-name">{p.name || "Untitled"}</h3>
+                <div
+                  className="card-body d-flex flex-column p-3"
+                  style={{ overflowY: "auto" }}
+                >
+                  <h5 className="card-title text-truncate">
+                    {p.name || "Untitled"}
+                  </h5>
 
-                    <div className="price-row">
-                      <p className="price">
-                        ${typeof p.price === "number" ? p.price.toFixed(2) : p.price}
-                      </p>
-                      {p.originalPrice && (
-                        <span className="original-price">
+                  <div className="mb-2">
+                    <span className="fw-bold text-danger me-2">
+                      $
+                      {typeof p.price === "number"
+                        ? p.price.toFixed(2)
+                        : p.price}
+                    </span>
+                    {p.originalPrice && (
+                      <>
+                        <span className="text-muted text-decoration-line-through me-2">
                           ${p.originalPrice.toFixed(2)}
                         </span>
-                      )}
-                    </div>
-
-                    <div className="badges">
-                      {p.badge && (
-                        <span className="badge badge-primary">{p.badge}</span>
-                      )}
-                      {discount > 0 && (
-                        <span className="badge badge-secondary">-{discount}%</span>
-                      )}
-                    </div>
-
-                    {p.rating != null && (
-                      <p className="rating">
-                        ⭐ {p.rating.toFixed(1)} (
-                        {p.reviewCount?.toLocaleString() || 0} reviews)
-                      </p>
+                        <span className="badge bg-warning text-dark">
+                          -{discount}%
+                        </span>
+                      </>
                     )}
-
-                    {p.description && (
-                      <p className="description">{p.description}</p>
-                    )}
-                    {p.details && <p className="details">{p.details}</p>}
-
-                    <p className="meta">
-                      Category: <span className="meta-value">{p.category}</span>
-                    </p>
-                    <p className="meta">
-                      Seller: <span className="meta-value">{p.seller}</span> —{" "}
-                      {p.location}
-                    </p>
-
-                    <div className="actions">
-                      <button
-                        onClick={() => setEditing(p)}
-                        className="btn btn-edit"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={async () => {
-                          await deleteProduct(p.id);
-                          load();
-                        }}
-                        className="btn btn-delete"
-                      >
-                        Delete
-                      </button>
-                    </div>
                   </div>
-                </li>
-              );
-            })}
-          </ul>
+
+                  {p.badge && (
+                    <span className="badge bg-primary me-2 mb-2">
+                      {p.badge}
+                    </span>
+                  )}
+
+                  {p.rating != null && (
+                    <p className="text-muted small mb-2">
+                      ⭐ {p.rating.toFixed(1)} (
+                      {p.reviewCount?.toLocaleString() || 0})
+                    </p>
+                  )}
+
+                  {p.description && (
+                    <p
+                      className="card-text small text-truncate"
+                      title={p.description}
+                    >
+                      {p.description}
+                    </p>
+                  )}
+                  {p.details && (
+                    <p
+                      className="card-text small text-muted text-truncate"
+                      title={p.details}
+                    >
+                      {p.details}
+                    </p>
+                  )}
+
+                  <p className="mb-1 small text-muted">
+                    <strong>Category:</strong> {p.category}
+                  </p>
+                  <p className="mb-3 small text-muted">
+                    <strong>Seller:</strong> {p.seller} — {p.location}
+                  </p>
+
+                  <div className="mt-auto d-flex gap-2">
+                    <button
+                      onClick={() => setEditing(p)}
+                      className="btn btn-sm btn-outline-primary w-100"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await deleteProduct(p.id);
+                        load();
+                      }}
+                      className="btn btn-sm btn-outline-danger w-100"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
