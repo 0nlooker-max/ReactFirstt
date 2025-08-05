@@ -1,0 +1,41 @@
+/* Ensures offcanvas backdrop click closes when using custom show logic */
+.offcanvas {
+  background: #fff;
+  width: 280px;
+  max-width: 100%;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  transition: transform .3s ease;
+  z-index: 1050;
+}
+
+/* Active category styling override if needed */
+.category-active {
+  border-left: 4px solid #f97316; /* orange-500 equivalent */
+  background-color: #fff7ed; /* light orange tint */
+  color: #c2410c !important; /* darker orange */
+}
+
+/* Special offer box gradient fallback */
+.special-offer-box {
+  background: linear-gradient(135deg, #ebf8ff 0%, #eef2ff 100%);
+  border-color: #dbeafe;
+}
+
+/* Sidebar for desktop */
+.desktop-sidebar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+}
+
+/* Responsive z-index layering if needed */
+@media (max-width: 991px) {
+  .desktop-sidebar {
+    display: none;
+  }
+}
