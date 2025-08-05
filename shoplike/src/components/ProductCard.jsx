@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Star, Heart, ShoppingCart } from "lucide-react";
-import "../assets/addprdct/list.css";
+import "../assets/componentcss/ProductCard.css";
+import { getProduct } from "../services/productService";
+
 
 export const ProductCard = ({ product = {}, onAddToCart = () => {} }) => {
   const [isLiked, setIsLiked] = useState(false);
@@ -13,55 +15,46 @@ export const ProductCard = ({ product = {}, onAddToCart = () => {} }) => {
   };
 
   const renderStars = (rating = 0) => {
+    
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
 
     for (let i = 0; i < fullStars; i++) {
-      stars.push(
-        <Star key={i} size={12} className="star filled" />
-      );
+      stars.push(<Star key={i} size={12} className="star filled" />);
     }
 
     if (hasHalfStar) {
-      stars.push(
-        <Star key="half" size={12} className="star half" />
-      );
+      stars.push(<Star key="half" size={12} className="star half" />);
     }
 
     const remaining = 5 - stars.length;
     for (let i = 0; i < remaining; i++) {
-      stars.push(
-        <Star key={`empty-${i}`} size={12} className="star empty" />
-      );
+      stars.push(<Star key={`empty-${i}`} size={12} className="star empty" />);
     }
 
     return stars;
   };
 
-  const discountPercentage = product.originalPrice
-    ? Math.round(
-        ((product.originalPrice - product.price) / product.originalPrice) * 100
-      )
-    : 0;
+  const discountPercentage =
+    product.originalPrice && product.price
+      ? Math.round(
+          ((product.originalPrice - product.price) / product.originalPrice) *
+            100
+        )
+      : 0;
+  const mainImage = product.image || product.imageUrl || "";
 
   return (
     <div
-      className={`pcard ${isHovered ? "hovered" : ""}`}
+      className={`pcard shopee-card ${isHovered ? "hovered" : ""}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link to={`/product/${product.id}`} className="image-link">
         <div className="image-wrapper">
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              className="product-img"
-            />
-          ) : (
-            <div className="no-image">No Image</div>
-          )}
+           
+
           {product.badge && (
             <div className="badge badge-primary">{product.badge}</div>
           )}
@@ -82,18 +75,15 @@ export const ProductCard = ({ product = {}, onAddToCart = () => {} }) => {
       </Link>
 
       <div className="content">
-        <Link
-          to={`/product/${product.id}`}
-          className="title"
-        >
-          {product.name}
+        <Link to={`/product/${product.id}`} className="title">
+          {product.name || "Untitled Product"}
         </Link>
 
         <div className="rating-row">
           <div className="stars">{renderStars(product.rating)}</div>
           <span className="review-count">
-            {product.rating ? product.rating.toFixed(1) : "0.0"} (
-            {product.reviewCount
+            {product.rating != null ? product.rating.toFixed(1) : "0.0"} (
+            {product.reviewCount != null
               ? product.reviewCount.toLocaleString()
               : "0"}
             )
@@ -101,7 +91,12 @@ export const ProductCard = ({ product = {}, onAddToCart = () => {} }) => {
         </div>
 
         <div className="price-row">
-          <span className="price">${product.price?.toFixed(2)}</span>
+          <span className="price">
+            $
+            {typeof product.price === "number"
+              ? product.price.toFixed(2)
+              : product.price}
+          </span>
           {product.originalPrice && (
             <span className="original-price">
               ${product.originalPrice.toFixed(2)}
@@ -110,9 +105,9 @@ export const ProductCard = ({ product = {}, onAddToCart = () => {} }) => {
         </div>
 
         <div className="seller-info">
-          <span>{product.seller}</span>
+          <span>{product.seller || "Unknown Seller"}</span>
           <span className="dot">•</span>
-          <span>{product.location}</span>
+          <span>{product.location || "Unknown Location"}</span>
         </div>
 
         <button
