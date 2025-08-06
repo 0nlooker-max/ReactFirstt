@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Star, Heart, ShoppingCart } from "lucide-react";
 import "../assets/componentcss/ProductCard.css";
-import { getProduct } from "../services/productService";
+
 
 
 export const ProductCard = ({ product = {}, onAddToCart = () => {} }) => {
@@ -44,6 +44,8 @@ export const ProductCard = ({ product = {}, onAddToCart = () => {} }) => {
         )
       : 0;
   const mainImage = product.image || product.imageUrl || "";
+  const productImages = [mainImage, mainImage, mainImage, mainImage];
+
 
   return (
     <div
@@ -52,9 +54,17 @@ export const ProductCard = ({ product = {}, onAddToCart = () => {} }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link to={`/product/${product.id}`} className="image-link">
-        <div className="image-wrapper">
-           
-
+        <div className="wrapper">
+          <div className="aspect-square bg-white rounded-lg shadow-md overflow-hidden">
+            <img
+              src={mainImage}
+              alt={product.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder.png";
+              }}
+            />
+          </div>
           {product.badge && (
             <div className="badge badge-primary">{product.badge}</div>
           )}
@@ -82,9 +92,15 @@ export const ProductCard = ({ product = {}, onAddToCart = () => {} }) => {
         <div className="rating-row">
           <div className="stars">{renderStars(product.rating)}</div>
           <span className="review-count">
-            {product.rating != null ? product.rating.toFixed(1) : "0.0"} (
-            {product.reviewCount != null
+            {typeof product.rating === "number" && !isNaN(product.rating)
+              ? product.rating.toFixed(1)
+              : product.rating && !isNaN(Number(product.rating))
+              ? Number(product.rating).toFixed(1)
+              : "0.0"} (
+            {typeof product.reviewCount === "number" && !isNaN(product.reviewCount)
               ? product.reviewCount.toLocaleString()
+              : product.reviewCount && !isNaN(Number(product.reviewCount))
+              ? Number(product.reviewCount).toLocaleString()
               : "0"}
             )
           </span>
@@ -97,11 +113,19 @@ export const ProductCard = ({ product = {}, onAddToCart = () => {} }) => {
               ? product.price.toFixed(2)
               : product.price}
           </span>
-          {product.originalPrice && (
-            <span className="original-price">
-              ${product.originalPrice.toFixed(2)}
-            </span>
-          )}
+          {typeof product.originalPrice === "number" && !isNaN(product.originalPrice)
+            ? (
+                <span className="original-price">
+                  ${product.originalPrice.toFixed(2)}
+                </span>
+              )
+            : product.originalPrice && !isNaN(Number(product.originalPrice))
+            ? (
+                <span className="original-price">
+                  ${Number(product.originalPrice).toFixed(2)}
+                </span>
+              )
+            : null}
         </div>
 
         <div className="seller-info">
