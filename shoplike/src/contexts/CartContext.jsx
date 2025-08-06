@@ -1,4 +1,5 @@
 import React, { useReducer, useContext } from 'react';
+import { updateProduct, createOrder, getProduct } from '../services/productService';
 
 const initialState = {
   items: [],
@@ -110,6 +111,25 @@ export const CartProvider = ({ children }) => {
     return state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
+  // Checkout function: deducts quantities, records order, clears cart
+  const checkout = async () => {
+    // 1. Deduct product quantities in Firestore
+    for (const item of state.items) {
+      // Get current product data
+      const product = await getProduct(item.id);
+      if (!product) continue;
+      const newQuantity = (product.quantity || 0) - item.quantity;
+      await updateProduct(item.id, { quantity: newQuantity });
+    }
+    // 2. Record the order in Firestore
+    await createOrder({
+      items: state.items.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
+      total: getTotalPrice(),
+    });
+    // 3. Clear the cart
+    clearCart();
+  };
+
   const value = {
     state,
     addToCart,
@@ -121,6 +141,7 @@ export const CartProvider = ({ children }) => {
     closeCart,
     getTotalItems,
     getTotalPrice,
+    checkout,
   };
 
   return (
