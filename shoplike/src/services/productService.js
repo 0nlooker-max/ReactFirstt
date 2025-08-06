@@ -10,6 +10,7 @@ import {
   import { db } from '../firebase';
   
   const productsCol = collection(db, 'products');
+  const ordersCol = collection(db, 'orders');
   
   export async function createProduct(data) {
     // data: { name, description, price, details }
@@ -40,4 +41,31 @@ import {
   const snapshot = await getDocs(productsCol);
   const match = snapshot.docs.find(doc => doc.id === id);
   return match ? { id: match.id, ...match.data() } : null;
+}
+
+// Create an order in Firestore
+export async function createOrder(orderData) {
+  // orderData: { items: [{id, name, price, quantity}], total, createdAt }
+  const ref = await addDoc(ordersCol, {
+    ...orderData,
+    createdAt: Date.now(),
+  });
+  return ref.id;
+}
+
+// Add a cart item to Firestore
+const cartItemsCol = collection(db, 'cartItems');
+export async function addCartItem(cartItem) {
+  // cartItem: { productId, name, price, quantity, addedAt }
+  const ref = await addDoc(cartItemsCol, {
+    ...cartItem,
+    addedAt: Date.now(),
+  });
+  return ref.id;
+}
+
+// Get all cart items from Firestore
+export async function getCartItems() {
+  const snapshot = await getDocs(cartItemsCol);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
