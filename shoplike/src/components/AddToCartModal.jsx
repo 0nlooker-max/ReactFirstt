@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Plus, Minus, ShoppingCart, Check } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
+import { addCartItem } from "../services/productService";
 import "../assets/componentcss/AddToCartModal.css";
 
 export const AddToCartModal = ({ product, isOpen, onClose }) => {
@@ -10,10 +11,17 @@ export const AddToCartModal = ({ product, isOpen, onClose }) => {
 
   if (!isOpen || !product) return null;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
+    // Save to Firestore
+    await addCartItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity,
+    });
     setShowConfirmation(true);
     setTimeout(() => {
       setShowConfirmation(false);
@@ -33,6 +41,7 @@ export const AddToCartModal = ({ product, isOpen, onClose }) => {
         ((product.originalPrice - product.price) / product.originalPrice) * 100
       )
     : 0;
+  const mainImage = product.image || product.imageUrl || "";
 
   return (
     <div className="modal-backdrop">
@@ -41,18 +50,25 @@ export const AddToCartModal = ({ product, isOpen, onClose }) => {
           <>
             <div className="modal-header">
               <h3 className="modal-title">Add to Cart</h3>
-              <button onClick={handleClose} className="close-btn" aria-label="Close">
+              <button
+                onClick={handleClose}
+                className="close-btn"
+                aria-label="Close"
+              >
                 <X size={24} />
               </button>
             </div>
 
             <div className="modal-body">
               <div className="product-summary">
-                <div className="image-wrapper">
+                <div className="aspect-square bg-white rounded-lg shadow-md overflow-hidden">
                   <img
-                    src={product.image}
+                    src={mainImage}
                     alt={product.name}
-                    className="product-thumb"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.png";
+                    }}
                   />
                 </div>
                 <div className="info">
