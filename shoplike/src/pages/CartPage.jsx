@@ -1,33 +1,86 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Plus, Minus, Trash2, ArrowLeft } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
 import { getCartItems } from "../services/productService";
 
+// Local reducer for cart page UI state
+const initialCartPageState = {
+  checkoutSuccess: false,
+  firebaseCartItems: [],
+  isLoading: false,
+  selectedItems: [],
+  redirectToReceipt: false,
+  checkedOutItems: []
+};
+
+const cartPageReducer = (state, action) => {
+  switch (action.type) {
+    case 'SET_CHECKOUT_SUCCESS':
+      return { ...state, checkoutSuccess: action.payload };
+    case 'SET_FIREBASE_ITEMS':
+      return { ...state, firebaseCartItems: action.payload };
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
+    case 'TOGGLE_ITEM_SELECTION':
+      const itemId = action.payload;
+      const isSelected = state.selectedItems.includes(itemId);
+      return { 
+        ...state, 
+        selectedItems: isSelected 
+          ? state.selectedItems.filter(id => id !== itemId)
+          : [...state.selectedItems, itemId]
+      };
+    case 'SET_REDIRECT_TO_RECEIPT':
+      return { ...state, redirectToReceipt: action.payload };
+    case 'SET_CHECKED_OUT_ITEMS':
+      return { ...state, checkedOutItems: action.payload };
+    default:
+      return state;
+  }
+};
+
 export const CartPage = () => {
   const navigate = useNavigate();
-  const {
-    state,
-    removeFromCart,
-    updateQuantity,
-    checkout,
-  } = useCart();
-  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
-  const [firebaseCartItems, setFirebaseCartItems] = useState([]);
-
+  const { state, dispatch, checkout } = useCart();
+  const [pageState, pageDispatch] = useReducer(cartPageReducer, initialCartPageState);
   useEffect(() => {
-    getCartItems().then(setFirebaseCartItems);
+    const fetchCartItems = async () => {
+      pageDispatch({ type: 'SET_LOADING', payload: true });
+      try {
+        const items = await getCartItems();
+        pageDispatch({ type: 'SET_FIREBASE_ITEMS', payload: items });
+      } catch (error) {
+        console.error('Error fetching cart items:', error);
+      } finally {
+        pageDispatch({ type: 'SET_LOADING', payload: false });
+      }
+    };
+    
+    fetchCartItems();
   }, []);
 
   // Combine local and firebase cart items for display and summary
   const allCartItems = [
     ...state.items.map(item => ({ ...item, _source: 'local' })),
-    ...firebaseCartItems.map(item => ({ ...item, _source: 'firebase' }))
+    ...pageState.firebaseCartItems.map(item => ({ ...item, _source: 'firebase' }))
   ];
 
-  // Calculate totals based on allCartItems
-  const totalItems = allCartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
-  const subtotal = allCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Get selected items
+  const selectedItems = allCartItems.filter(item => 
+    pageState.selectedItems.includes(item.id) || 
+    (item._source === 'firebase' && pageState.selectedItems.includes('firebase-' + item.id))
+  );
+
+  // Calculate totals based on selected items
+  const totalItems = selectedItems.length > 0 
+    ? selectedItems.reduce((sum, item) => sum + (item.quantity || 0), 0)
+    : allCartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    
+  const subtotal = selectedItems.length > 0
+    ? selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    : allCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
   const tax = subtotal * 0.08;
   const total = subtotal + tax;
 
@@ -56,8 +109,22 @@ export const CartPage = () => {
               {allCartItems.map((item) => (
                 <div
                   key={(item._source === 'firebase' ? 'firebase-' : '') + item.id}
-                  className="flex flex-col sm:flex-row bg-white shadow rounded-lg p-4 gap-4"
+                  className={`flex flex-col sm:flex-row bg-white shadow rounded-lg p-4 gap-4 ${pageState.selectedItems.includes((item._source === 'firebase' ? 'firebase-' : '') + item.id) ? 'border-2 border-orange-500' : ''}`}
                 >
+                  {/* Checkbox for selection */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`select-${(item._source === 'firebase' ? 'firebase-' : '') + item.id}`}
+                      checked={pageState.selectedItems.includes((item._source === 'firebase' ? 'firebase-' : '') + item.id)}
+                      onChange={() => pageDispatch({ 
+                        type: 'TOGGLE_ITEM_SELECTION', 
+                        payload: (item._source === 'firebase' ? 'firebase-' : '') + item.id 
+                      })}
+                      className="h-5 w-5 text-orange-600 rounded focus:ring-orange-500"
+                    />
+                  </div>
+                  
                   {/* Image */}
                   <img
                     src={item.image || item.imageUrl || "/placeholder.png"}
@@ -70,7 +137,7 @@ export const CartPage = () => {
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-                      <p className="text-sm text-gray-500">Sold by: {item.seller}</p>
+                      <p className="text-sm text-gray-500">Sold by: {item.seller || 'Unknown Seller'}</p>
                       <p className="text-red-600 font-bold text-lg mt-1">${item.price}</p>
                       {item._source === 'firebase' && (
                         <span className="inline-block mt-1 text-xs text-blue-600 bg-blue-50 rounded px-2 py-0.5">Synced from Firebase</span>
@@ -84,14 +151,20 @@ export const CartPage = () => {
                         {item._source === 'local' ? (
                           <>
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => dispatch({ 
+                                type: 'UPDATE_QUANTITY', 
+                                payload: { id: item.id, quantity: item.quantity - 1 }
+                              })}
                               className="p-2 hover:bg-gray-100"
                             >
                               <Minus size={16} />
                             </button>
                             <span className="px-4">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => dispatch({ 
+                                type: 'UPDATE_QUANTITY', 
+                                payload: { id: item.id, quantity: item.quantity + 1 }
+                              })}
                               className="p-2 hover:bg-gray-100"
                             >
                               <Plus size={16} />
@@ -107,15 +180,35 @@ export const CartPage = () => {
                         ${(item.price * item.quantity).toFixed(2)}
                       </div>
 
-                      {/* Remove Button (only for local items) */}
-                      {item._source === 'local' && (
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-red-500 hover:text-red-700 p-2"
-                        >
-                          <Trash2 size={20} />
-                        </button>
-                      )}
+                      {/* Remove Button */}
+                      <button
+                        onClick={async () => {
+                          if (item._source === 'local') {
+                            // Remove local item
+                            dispatch({ 
+                              type: 'REMOVE_FROM_CART', 
+                              payload: item.id 
+                            });
+                          } else if (item._source === 'firebase') {
+                            // Remove Firebase item
+                            try {
+                              const { deleteCartItem } = await import('../services/productService');
+                              await deleteCartItem(item.id);
+                              
+                              // Update UI by removing the item from firebaseCartItems
+                              pageDispatch({
+                                type: 'SET_FIREBASE_ITEMS',
+                                payload: pageState.firebaseCartItems.filter(cartItem => cartItem.id !== item.id)
+                              });
+                            } catch (error) {
+                              console.error('Error deleting cart item:', error);
+                            }
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-700 p-2"
+                      >
+                        <Trash2 size={20} />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -154,17 +247,83 @@ export const CartPage = () => {
 
             <button
               onClick={async () => {
-                await checkout();
-                setCheckoutSuccess(true);
-                setTimeout(() => setCheckoutSuccess(false), 2500);
+                // Check if any items are selected
+                if (selectedItems.length === 0) {
+                  alert('Please select at least one item to checkout');
+                  return;
+                }
+                
+                pageDispatch({ type: 'SET_LOADING', payload: true });
+                try {
+                  // Store selected items for receipt page
+                  pageDispatch({ type: 'SET_CHECKED_OUT_ITEMS', payload: selectedItems });
+                  
+                  // Create a default customer info object for the cart page checkout
+                  // This is a simplified version - in a real app, you would collect this info from the user
+                  const customerInfo = {
+                    firstName: 'Guest',
+                    lastName: 'User',
+                    email: 'guest@example.com',
+                    phone: '555-555-5555',
+                    address: '123 Main St',
+                    city: 'Anytown',
+                    zipCode: '12345'
+                  };
+                  
+                  // Process checkout for selected items with customer info
+                  await checkout(customerInfo);
+                  
+                  // Remove selected items from Firebase
+                  const firebaseItemIds = selectedItems
+                    .filter(item => item._source === 'firebase')
+                    .map(item => item.id);
+                  
+                  if (firebaseItemIds.length > 0) {
+                    const { deleteCartItems } = await import('../services/productService');
+                    await deleteCartItems(firebaseItemIds);
+                  }
+                  
+                  // Remove selected local items
+                  selectedItems
+                    .filter(item => item._source === 'local')
+                    .forEach(item => {
+                      dispatch({ type: 'REMOVE_FROM_CART', payload: item.id });
+                    });
+                  
+                  // Show success message
+                  pageDispatch({ type: 'SET_CHECKOUT_SUCCESS', payload: true });
+                  
+                  // Store order information in localStorage for receipt page
+                  const orderInfo = {
+                    items: selectedItems,
+                    total: subtotal,
+                    tax: tax,
+                    grandTotal: total,
+                    customerInfo: customerInfo,
+                    orderId: localStorage.getItem('lastOrderId') // Get the order ID saved by checkout function
+                  };
+                  localStorage.setItem('orderInfo', JSON.stringify(orderInfo));
+                  localStorage.setItem('checkedOutItems', JSON.stringify(selectedItems));
+                  
+                  // Navigate to receipt page
+                  setTimeout(() => {
+                    pageDispatch({ type: 'SET_REDIRECT_TO_RECEIPT', payload: true });
+                    navigate('/receipt');
+                  }, 1500);
+                } catch (error) {
+                  console.error('Error during checkout:', error);
+                } finally {
+                  pageDispatch({ type: 'SET_LOADING', payload: false });
+                }
               }}
               className="w-full bg-orange-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors duration-200"
+              disabled={pageState.isLoading || selectedItems.length === 0}
             >
-              Proceed to Checkout
+              {pageState.isLoading ? 'Processing...' : `Checkout Selected (${selectedItems.length})`}
             </button>
-            {checkoutSuccess && (
+            {pageState.checkoutSuccess && (
               <div className="mt-4 p-4 bg-green-100 text-green-800 rounded-lg text-center">
-                Checkout successful! Your order has been placed.
+                Checkout successful! Redirecting to receipt...
               </div>
             )}
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, Bell } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, Bell, Truck } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 
 export const Header = ({ searchQuery, onSearchChange, onMenuToggle }) => {
@@ -68,6 +68,13 @@ export const Header = ({ searchQuery, onSearchChange, onMenuToggle }) => {
                   {getTotalItems()}
                 </span>
               )}
+            </button>
+            
+            <button 
+              onClick={() => navigate('/receive')}
+              className="text-white hover:text-orange-100 transition-colors duration-200"
+            >
+              <Truck size={20} />
             </button>
             
             <button 

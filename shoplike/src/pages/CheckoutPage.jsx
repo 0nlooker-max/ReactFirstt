@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
+import React, { useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CreditCard, MapPin, User, Lock } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 
-export const CheckoutPage = () => {
-  const navigate = useNavigate();
-  const { state, getTotalPrice, clearCart } = useCart();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [orderComplete, setOrderComplete] = useState(false);
-  
-  const [formData, setFormData] = useState({
+// Checkout page reducer
+const initialCheckoutState = {
+  isProcessing: false,
+  orderComplete: false,
+  formData: {
     firstName: '',
     lastName: '',
     email: '',
@@ -21,28 +19,83 @@ export const CheckoutPage = () => {
     expiryDate: '',
     cvv: '',
     cardName: ''
-  });
+  }
+};
+
+const checkoutReducer = (state, action) => {
+  switch (action.type) {
+    case 'SET_PROCESSING':
+      return { ...state, isProcessing: action.payload };
+    case 'SET_ORDER_COMPLETE':
+      return { ...state, orderComplete: action.payload };
+    case 'UPDATE_FORM_FIELD':
+      return { 
+        ...state, 
+        formData: {
+          ...state.formData,
+          [action.payload.name]: action.payload.value
+        }
+      };
+    default:
+      return state;
+  }
+};
+
+export const CheckoutPage = () => {
+  const navigate = useNavigate();
+  const { state, dispatch, getTotalPrice, checkout } = useCart();
+  const [checkoutState, checkoutDispatch] = useReducer(checkoutReducer, initialCheckoutState);
+  
+  const { isProcessing, orderComplete, formData } = checkoutState;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    checkoutDispatch({ 
+      type: 'UPDATE_FORM_FIELD', 
+      payload: { name, value }
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsProcessing(true);
+    checkoutDispatch({ type: 'SET_PROCESSING', payload: true });
     
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
-    setOrderComplete(true);
-    clearCart();
-    
-    // Auto redirect after success
-    setTimeout(() => {
-      navigate('/');
-    }, 3000);
+    try {
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Process checkout with Firestore and pass form data
+      const orderId = await checkout(formData);
+      
+      // Calculate totals
+      const subtotal = getTotalPrice();
+      const tax = subtotal * 0.08;
+      const grandTotal = subtotal + tax;
+      
+      // Store order information in localStorage for receipt page
+      const orderInfo = {
+        items: state.items,
+        subtotal: subtotal,
+        tax: tax,
+        grandTotal: grandTotal,
+        customerInfo: formData,
+        orderId: orderId
+      };
+      localStorage.setItem('orderInfo', JSON.stringify(orderInfo));
+      
+      // Update UI state
+      checkoutDispatch({ type: 'SET_PROCESSING', payload: false });
+      checkoutDispatch({ type: 'SET_ORDER_COMPLETE', payload: true });
+      
+      // Navigate to receipt page instead of home
+      setTimeout(() => {
+        navigate('/receipt');
+      }, 1500);
+    } catch (error) {
+      console.error('Error processing checkout:', error);
+      checkoutDispatch({ type: 'SET_PROCESSING', payload: false });
+      // Could add error handling state here
+    }
   };
 
   if (state.items.length === 0 && !orderComplete) {
@@ -77,7 +130,7 @@ export const CheckoutPage = () => {
             </p>
           </div>
           <p className="text-sm text-gray-500">
-            Redirecting to home page...
+            Redirecting to receipt page...
           </p>
         </div>
       </div>

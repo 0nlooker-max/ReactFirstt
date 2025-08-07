@@ -25,6 +25,24 @@ const cartReducer = (state, action) => {
         items: [...state.items, { ...action.payload, quantity: 1 }],
       };
     }
+    case 'ADD_TO_CART_WITH_QUANTITY': {
+      const { product, quantity } = action.payload;
+      const existingItem = state.items.find(item => item.id === product.id);
+      if (existingItem) {
+        return {
+          ...state,
+          items: state.items.map(item =>
+            item.id === product.id
+              ? { ...item, quantity: item.quantity + quantity }
+              : item
+          ),
+        };
+      }
+      return {
+        ...state,
+        items: [...state.items, { ...product, quantity }],
+      };
+    }
     case 'REMOVE_FROM_CART':
       return {
         ...state,
@@ -79,6 +97,10 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: 'ADD_TO_CART', payload: product });
   };
 
+  const addToCartWithQuantity = (product, quantity) => {
+    dispatch({ type: 'ADD_TO_CART_WITH_QUANTITY', payload: { product, quantity } });
+  };
+
   const removeFromCart = (id) => {
     dispatch({ type: 'REMOVE_FROM_CART', payload: id });
   };
@@ -112,7 +134,7 @@ export const CartProvider = ({ children }) => {
   };
 
   // Checkout function: deducts quantities, records order, clears cart
-  const checkout = async () => {
+  const checkout = async (formData) => {
     // 1. Deduct product quantities in Firestore
     for (const item of state.items) {
       // Get current product data
@@ -121,18 +143,43 @@ export const CartProvider = ({ children }) => {
       const newQuantity = (product.quantity || 0) - item.quantity;
       await updateProduct(item.id, { quantity: newQuantity });
     }
-    // 2. Record the order in Firestore
-    await createOrder({
-      items: state.items.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
-      total: getTotalPrice(),
-    });
+    
+    // Calculate totals
+    const subtotal = getTotalPrice();
+    const tax = subtotal * 0.08;
+    const grandTotal = subtotal + tax;
+    
+    // 2. Record the order in Firestore with customer information
+    const orderData = {
+      items: state.items.map(({ id, name, price, quantity, image }) => ({ 
+        id, 
+        name, 
+        price, 
+        quantity,
+        image // Include image for display in receive page
+      })),
+      subtotal: subtotal,
+      tax: tax,
+      grandTotal: grandTotal,
+      customerInfo: formData, // Include customer information
+    };
+    
+    // Save order to Firestore
+    const orderId = await createOrder(orderData);
+    
+    // Save order ID to localStorage for receipt page
+    localStorage.setItem('lastOrderId', orderId);
+    
     // 3. Clear the cart
     clearCart();
+    
+    return orderId;
   };
 
   const value = {
     state,
     addToCart,
+    addToCartWithQuantity,
     removeFromCart,
     updateQuantity,
     clearCart,

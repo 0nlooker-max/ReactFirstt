@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { ProductGrid } from '../components/ProductGrid';
-import { FilterBar } from '../components/FilterBar';
+import { FilterBar } from '../components/FilterBar'; 
 import { AddToCartModal } from '../components/AddToCartModal';
 import { useProducts } from '../hooks/useProduct';
 import "../assets/global.css";

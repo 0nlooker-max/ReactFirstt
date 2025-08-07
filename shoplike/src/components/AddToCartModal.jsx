@@ -1,38 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useReducer } from "react";
 import { X, Plus, Minus, ShoppingCart, Check } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
 import { addCartItem } from "../services/productService";
 import "../assets/componentcss/AddToCartModal.css";
 
+// Modal reducer for local state management
+const initialModalState = {
+  quantity: 1,
+  showConfirmation: false,
+};
+
+const modalReducer = (state, action) => {
+  switch (action.type) {
+    case 'SET_QUANTITY':
+      return { ...state, quantity: action.payload };
+    case 'SHOW_CONFIRMATION':
+      return { ...state, showConfirmation: true };
+    case 'HIDE_CONFIRMATION':
+      return { ...state, showConfirmation: false, quantity: 1 };
+    case 'RESET':
+      return initialModalState;
+    default:
+      return state;
+  }
+};
+
 export const AddToCartModal = ({ product, isOpen, onClose }) => {
-  const [quantity, setQuantity] = useState(1);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const { addToCart } = useCart();
+  const [modalState, modalDispatch] = useReducer(modalReducer, initialModalState);
+  const { quantity, showConfirmation } = modalState;
+  const { state, addToCartWithQuantity } = useCart();
 
   if (!isOpen || !product) return null;
 
   const handleAddToCart = async () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product);
-    }
-    // Save to Firestore
+    // Add to cart using the context function with quantity
+    addToCartWithQuantity(product, quantity);
+    
+    // Save all product information to Firestore
     await addCartItem({
       productId: product.id,
       name: product.name,
       price: product.price,
+      originalPrice: product.originalPrice,
       quantity,
+      image: product.image || product.imageUrl,
+      seller: product.seller || 'Unknown Seller',
+      description: product.description,
+      category: product.category,
+      // Include any other product information available
+      ...(product.details && { details: product.details }),
+      ...(product.rating && { rating: product.rating }),
     });
-    setShowConfirmation(true);
+    
+    // Show confirmation and handle modal state
+    modalDispatch({ type: 'SHOW_CONFIRMATION' });
     setTimeout(() => {
-      setShowConfirmation(false);
-      setQuantity(1);
+      modalDispatch({ type: 'HIDE_CONFIRMATION' });
       onClose();
     }, 2000);
   };
 
   const handleClose = () => {
-    setQuantity(1);
-    setShowConfirmation(false);
+    modalDispatch({ type: 'RESET' });
     onClose();
   };
 
@@ -94,7 +123,10 @@ export const AddToCartModal = ({ product, isOpen, onClose }) => {
                 <label className="label">Quantity</label>
                 <div className="quantity-controls">
                   <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    onClick={() => modalDispatch({ 
+                      type: 'SET_QUANTITY', 
+                      payload: Math.max(1, quantity - 1) 
+                    })}
                     className="qty-btn"
                     aria-label="Decrease quantity"
                   >
@@ -102,7 +134,10 @@ export const AddToCartModal = ({ product, isOpen, onClose }) => {
                   </button>
                   <div className="qty-display">{quantity}</div>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => modalDispatch({ 
+                      type: 'SET_QUANTITY', 
+                      payload: quantity + 1 
+                    })}
                     className="qty-btn"
                     aria-label="Increase quantity"
                   >

@@ -6,6 +6,8 @@ import { ProductDetailPage } from './pages/ProductDeatailPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { ReceiptPage } from './pages/ReceiptPage';
+import { ReceivePage } from './pages/ReceivePage';
 import { CartProvider } from './contexts/CartContext';
 import { useProducts } from './hooks/useProduct';
 import { ProductList } from './components/ProductList';
@@ -33,6 +35,8 @@ function App() {
             <Route path="/product/:id" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/receipt" element={<ReceiptPage />} />
+            <Route path="/receive" element={<ReceivePage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/addproduct" element={<ProductList />} />
            
