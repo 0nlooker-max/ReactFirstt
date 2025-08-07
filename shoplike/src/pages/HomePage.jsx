@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { ProductGrid } from '../components/ProductGrid';
 import { FilterBar } from '../components/FilterBar';

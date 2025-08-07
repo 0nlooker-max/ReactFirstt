@@ -1,4 +1,3 @@
-import React from "react";
 import { X } from "lucide-react";
 import { categories } from "../data/products";
 import { Link } from "react-router-dom";
