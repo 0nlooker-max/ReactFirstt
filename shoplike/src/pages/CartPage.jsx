@@ -1,12 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Plus, Minus, Trash2, ArrowLeft } from 'lucide-react';
-import { useCart } from '../contexts/CartContext';
-import { getCartItems } from '../services/productService';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ShoppingBag, Plus, Minus, Trash2, ArrowLeft } from "lucide-react";
+import { useCart } from "../contexts/CartContext";
+import { getCartItems } from "../services/productService";
 
 export const CartPage = () => {
   const navigate = useNavigate();
-  const { state, removeFromCart, updateQuantity, getTotalItems, getTotalPrice, checkout } = useCart();
+  const {
+    state,
+    removeFromCart,
+    updateQuantity,
+    checkout,
+  } = useCart();
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [firebaseCartItems, setFirebaseCartItems] = useState([]);
 
@@ -14,56 +19,23 @@ export const CartPage = () => {
     getCartItems().then(setFirebaseCartItems);
   }, []);
 
-  // Show Firestore cart items if any
-  if (firebaseCartItems.length > 0) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Cart Items </h2>
-        <table className="table-auto w-full mb-8">
-          <thead>
-            <tr>
-              <th className="px-4 py-2">Product</th>
-              <th className="px-4 py-2">Price</th>
-              <th className="px-4 py-2">Quantity</th>
-              <th className="px-4 py-2">Total</th>
-              <th className="px-4 py-2">Added At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {firebaseCartItems.map((item) => (
-              <tr key={item.id}>
-                <td className="border px-4 py-2">{item.name}</td>
-                <td className="border px-4 py-2">
-                  ${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}
-                </td>
-                <td className="border px-4 py-2">{item.quantity}</td>
-                <td className="border px-4 py-2">
-                  ${(item.price * item.quantity).toFixed(2)}
-                </td>
-                <td className="border px-4 py-2">
-                  {item.addedAt ? new Date(item.addedAt).toLocaleString() : '-'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  // Combine local and firebase cart items for display and summary
+  const allCartItems = [
+    ...state.items.map(item => ({ ...item, _source: 'local' })),
+    ...firebaseCartItems.map(item => ({ ...item, _source: 'firebase' }))
+  ];
 
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
-        >
-          <ArrowLeft size={20} />
-          <span>Continue Shopping</span>
-        </button>
-      </div>
-    );
-  }
+  // Calculate totals based on allCartItems
+  const totalItems = allCartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const subtotal = allCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const tax = subtotal * 0.08;
+  const total = subtotal + tax;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Back Button */}
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate("/")}
         className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-6 transition-colors duration-200"
       >
         <ArrowLeft size={20} />
@@ -76,21 +48,22 @@ export const CartPage = () => {
           <div className="bg-white rounded-lg shadow-md">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-800">
-                Shopping Cart ({getTotalItems()} items)
+                Shopping Cart ({totalItems} items)
               </h2>
             </div>
 
             <div className="space-y-4 p-4">
-              {state.items.map((item) => (
+              {allCartItems.map((item) => (
                 <div
-                  key={item.id}
+                  key={(item._source === 'firebase' ? 'firebase-' : '') + item.id}
                   className="flex flex-col sm:flex-row bg-white shadow rounded-lg p-4 gap-4"
                 >
                   {/* Image */}
                   <img
-                    src={item.image}
+                    src={item.image || item.imageUrl || "/placeholder.png"}
                     alt={item.name}
                     className="w-full sm:w-32 h-32 object-cover rounded-md"
+                    onError={e => { e.currentTarget.src = "/placeholder.png"; }}
                   />
 
                   {/* Details */}
@@ -99,25 +72,34 @@ export const CartPage = () => {
                       <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
                       <p className="text-sm text-gray-500">Sold by: {item.seller}</p>
                       <p className="text-red-600 font-bold text-lg mt-1">${item.price}</p>
+                      {item._source === 'firebase' && (
+                        <span className="inline-block mt-1 text-xs text-blue-600 bg-blue-50 rounded px-2 py-0.5">Synced from Firebase</span>
+                      )}
                     </div>
 
                     {/* Quantity + Total + Remove */}
                     <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-                      {/* Quantity Controls */}
+                      {/* Quantity Controls (only for local items) */}
                       <div className="flex items-center border border-gray-300 rounded-md">
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="p-2 hover:bg-gray-100"
-                        >
-                          <Minus size={16} />
-                        </button>
-                        <span className="px-4">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="p-2 hover:bg-gray-100"
-                        >
-                          <Plus size={16} />
-                        </button>
+                        {item._source === 'local' ? (
+                          <>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="p-2 hover:bg-gray-100"
+                            >
+                              <Minus size={16} />
+                            </button>
+                            <span className="px-4">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="p-2 hover:bg-gray-100"
+                            >
+                              <Plus size={16} />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="px-4">{item.quantity}</span>
+                        )}
                       </div>
 
                       {/* Item Total */}
@@ -125,13 +107,15 @@ export const CartPage = () => {
                         ${(item.price * item.quantity).toFixed(2)}
                       </div>
 
-                      {/* Remove Button */}
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:text-red-700 p-2"
-                      >
-                        <Trash2 size={20} />
-                      </button>
+                      {/* Remove Button (only for local items) */}
+                      {item._source === 'local' && (
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-red-500 hover:text-red-700 p-2"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -147,8 +131,8 @@ export const CartPage = () => {
 
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-sm">
-                <span>Subtotal ({getTotalItems()} items):</span>
-                <span>${getTotalPrice().toFixed(2)}</span>
+                <span>Subtotal ({totalItems} items):</span>
+                <span>${subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Shipping:</span>
@@ -156,13 +140,13 @@ export const CartPage = () => {
               </div>
               <div className="flex justify-between text-sm">
                 <span>Tax:</span>
-                <span>${(getTotalPrice() * 0.08).toFixed(2)}</span>
+                <span>${tax.toFixed(2)}</span>
               </div>
               <div className="border-t border-gray-200 pt-3">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total:</span>
                   <span className="text-orange-600">
-                    ${(getTotalPrice() * 1.08).toFixed(2)}
+                    ${total.toFixed(2)}
                   </span>
                 </div>
               </div>
