@@ -12,8 +12,8 @@ export const ProfilePage = () => {
               <User className="text-orange-600" size={32} />
             </div>
             <div className="text-white">
-              <h1 className="text-2xl font-bold">John Doe</h1>
-              <p className="text-orange-100">john.doe@example.com</p>
+              <h1 className="text-2xl font-bold">Ricksel P</h1>
+              <p className="text-orange-100">rix@example.com</p>
               <p className="text-orange-100 text-sm">Member since 2023</p>
             </div>
           </div>
