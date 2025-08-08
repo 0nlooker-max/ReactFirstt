@@ -6,8 +6,7 @@ import { AddToCartModal } from '../components/AddToCartModal';
 import { useProducts } from '../hooks/useProduct';
 import "../assets/global.css";
 
-export const HomePage = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+export const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
