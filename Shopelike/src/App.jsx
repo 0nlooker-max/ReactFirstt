@@ -27,11 +27,11 @@ function App() {
           <Header
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            onMenuToggle={() => setIsSidebarOpen(true)}
           />
 
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<HomePage isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />} />
             <Route path="/product/:id" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
