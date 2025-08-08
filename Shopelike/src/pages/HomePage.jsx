@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sidebar } from '../components/Sidebar';
+import { Sidebar } from '../components/SideBar';
 import { ProductGrid } from '../components/ProductGrid';
 import { FilterBar } from '../components/FilterBar'; 
 import { AddToCartModal } from '../components/AddToCartModal';
