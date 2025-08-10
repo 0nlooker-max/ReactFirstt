@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Plus, Minus, Trash2, ArrowLeft } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
 import { getCartItems } from "../services/productService";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase"; // adjust path as needed
 
 // Local reducer for cart page UI state
 const initialCartPageState = {
@@ -271,7 +273,11 @@ export const CartPage = () => {
                   };
                   
                   // Process checkout for selected items with customer info
-                  await checkout(customerInfo);
+                  await checkout(customerInfo, {
+                    subtotal,
+                    tax,
+                    grandTotal: total
+                  });
                   
                   // Remove selected items from Firebase
                   const firebaseItemIds = selectedItems
@@ -337,4 +343,16 @@ export const CartPage = () => {
       </div>
     </div>
   );
+};
+
+export const checkout = async (customerInfo, orderTotals, items) => {
+  await addDoc(collection(db, "orders"), {
+    customerInfo,
+    items,
+    subtotal: orderTotals.subtotal,
+    tax: orderTotals.tax,
+    grandTotal: orderTotals.grandTotal,
+    createdAt: serverTimestamp(),
+    status: "Processing",
+  });
 };
