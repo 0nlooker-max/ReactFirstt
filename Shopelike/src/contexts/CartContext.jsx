@@ -10,37 +10,40 @@ const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_TO_CART': {
       const existingItem = state.items.find(item => item.id === action.payload.id);
+      // Always ensure price and quantity are valid
+      const price = typeof action.payload.price === 'number' && !isNaN(action.payload.price) ? action.payload.price : 0;
       if (existingItem) {
         return {
           ...state,
           items: state.items.map(item =>
             item.id === action.payload.id
-              ? { ...item, quantity: item.quantity + 1 }
+              ? { ...item, quantity: item.quantity + 1, price }
               : item
           ),
         };
       }
       return {
         ...state,
-        items: [...state.items, { ...action.payload, quantity: 1 }],
+        items: [...state.items, { ...action.payload, quantity: 1, price }],
       };
     }
     case 'ADD_TO_CART_WITH_QUANTITY': {
       const { product, quantity } = action.payload;
+      const price = typeof product.price === 'number' && !isNaN(product.price) ? product.price : 0;
       const existingItem = state.items.find(item => item.id === product.id);
       if (existingItem) {
         return {
           ...state,
           items: state.items.map(item =>
             item.id === product.id
-              ? { ...item, quantity: item.quantity + quantity }
+              ? { ...item, quantity: item.quantity + quantity, price }
               : item
           ),
         };
       }
       return {
         ...state,
-        items: [...state.items, { ...product, quantity }],
+        items: [...state.items, { ...product, quantity, price }],
       };
     }
     case 'REMOVE_FROM_CART':
@@ -130,7 +133,11 @@ export const CartProvider = ({ children }) => {
   };
 
   const getTotalPrice = () => {
-    return state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return state.items.reduce((total, item) => {
+      const price = typeof item.price === 'number' && !isNaN(item.price) ? item.price : 0;
+      const quantity = typeof item.quantity === 'number' && !isNaN(item.quantity) ? item.quantity : 0;
+      return total + (price * quantity);
+    }, 0);
   };
 
   // Checkout function: deducts quantities, records order, clears cart
@@ -158,12 +165,11 @@ export const CartProvider = ({ children }) => {
         quantity,
         image // Include image for display in receive page
       })),
-      subtotal: subtotal,
-      tax: tax,
-      grandTotal: grandTotal,
+      subtotal,
+      tax,
+      grandTotal,
       customerInfo: formData, // Include customer information
     };
-    
     // Save order to Firestore
     const orderId = await createOrder(orderData);
     
