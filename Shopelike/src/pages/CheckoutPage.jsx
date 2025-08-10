@@ -2,6 +2,7 @@ import React, { useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CreditCard, MapPin, User, Lock } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import '../services/productService'; 
 
 // Checkout page reducer
 const initialCheckoutState = {
@@ -65,19 +66,18 @@ export const CheckoutPage = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Process checkout with Firestore and pass form data
-      const orderId = await checkout(formData);
-      
-      // Calculate totals
-      const subtotal = getTotalPrice();
-      const tax = subtotal * 0.08;
-      const grandTotal = subtotal + tax;
+      const orderId = await checkout(formData, {
+        subtotal: getTotalPrice(),
+        tax: getTotalPrice() * 0.08,
+        grandTotal: getTotalPrice() * 1.08
+      }, state.items);
       
       // Store order information in localStorage for receipt page
       const orderInfo = {
         items: state.items,
-        subtotal: subtotal,
-        tax: tax,
-        grandTotal: grandTotal,
+        subtotal: getTotalPrice(),
+        tax: getTotalPrice() * 0.08,
+        grandTotal: getTotalPrice() * 1.08,
         customerInfo: formData,
         orderId: orderId
       };
