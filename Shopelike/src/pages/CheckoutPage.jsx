@@ -57,46 +57,45 @@ export const CheckoutPage = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    checkoutDispatch({ type: 'SET_PROCESSING', payload: true });
-    
-    try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Process checkout with Firestore and pass form data
-      const orderId = await checkout(formData, {
-        subtotal: getTotalPrice(),
-        tax: getTotalPrice() * 0.08,
-        grandTotal: getTotalPrice() * 1.08
-      }, state.items);
-      
-      // Store order information in localStorage for receipt page
-      const orderInfo = {
-        items: state.items,
-        subtotal: getTotalPrice(),
-        tax: getTotalPrice() * 0.08,
-        grandTotal: getTotalPrice() * 1.08,
-        customerInfo: formData,
-        orderId: orderId
-      };
-      localStorage.setItem('orderInfo', JSON.stringify(orderInfo));
-      
-      // Update UI state
-      checkoutDispatch({ type: 'SET_PROCESSING', payload: false });
-      checkoutDispatch({ type: 'SET_ORDER_COMPLETE', payload: true });
-      
-      // Navigate to receipt page instead of home
-      setTimeout(() => {
-        navigate('/receipt');
-      }, 1500);
-    } catch (error) {
-      console.error('Error processing checkout:', error);
-      checkoutDispatch({ type: 'SET_PROCESSING', payload: false });
-      // Could add error handling state here
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  checkoutDispatch({ type: 'SET_PROCESSING', payload: true });
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const subtotal = getTotalPrice();
+    const tax = subtotal * 0.08;
+    const grandTotal = subtotal + tax;
+
+    const orderId = await checkout(
+      formData,
+      { subtotal, tax, grandTotal },
+      state.items
+    );
+
+    const orderInfo = {
+      items: state.items,
+      subtotal,
+      tax,
+      grandTotal,
+      customerInfo: formData,
+      orderId
+    };
+    localStorage.setItem('orderInfo', JSON.stringify(orderInfo));
+
+    checkoutDispatch({ type: 'SET_PROCESSING', payload: false });
+    checkoutDispatch({ type: 'SET_ORDER_COMPLETE', payload: true });
+
+    setTimeout(() => {
+      navigate('/receipt');
+    }, 1500);
+  } catch (error) {
+    console.error('Error processing checkout:', error);
+    checkoutDispatch({ type: 'SET_PROCESSING', payload: false });
+  }
+};
+
 
   if (state.items.length === 0 && !orderComplete) {
     return (
