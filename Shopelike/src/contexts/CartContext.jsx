@@ -1,4 +1,5 @@
-import React, { useReducer } from 'react';
+//../contexts/CartContext
+import React, { useReducer, useContext } from 'react';
 import { updateProduct, createOrder, getProduct } from '../services/productService';
 
 const initialState = {
@@ -140,71 +141,63 @@ export const CartProvider = ({ children }) => {
     }, 0);
   };
 
-  // Checkout function: deducts quantities, records order, clears cart
-  const checkout = async (formData) => {
-    // 1. Deduct product quantities in Firestore
-    for (const item of state.items) {
-      // Get current product data
+  const checkout = async (formData, totals, items) => {
+    // Deduct product quantities in Firestore
+    for (const item of items) {
       const product = await getProduct(item.id);
       if (!product) continue;
       const newQuantity = (product.quantity || 0) - item.quantity;
       await updateProduct(item.id, { quantity: newQuantity });
     }
-    
-    // Calculate totals
-    const subtotal = getTotalPrice();
-    const tax = subtotal * 0.08;
-    const grandTotal = subtotal + tax;
-    
-    // 2. Record the order in Firestore with customer information
+
+    // Prepare order data with passed totals
     const orderData = {
-      items: state.items.map(({ id, name, price, quantity, image }) => ({ 
-        id, 
-        name, 
-        price, 
+      items: items.map(({ id, name, price, quantity, image }) => ({
+        id,
+        name,
+        price,
         quantity,
-        image // Include image for display in receive page
+        image
       })),
-      subtotal,
-      tax,
-      grandTotal,
-      customerInfo: formData, // Include customer information
+      subtotal: totals.subtotal,
+      tax: totals.tax,
+      grandTotal: totals.grandTotal,
+      customerInfo: formData
     };
-    // Save order to Firestore
+
     const orderId = await createOrder(orderData);
-    
-    // Save order ID to localStorage for receipt page
     localStorage.setItem('lastOrderId', orderId);
-    
-    // 3. Clear the cart
+
+    // Clear cart after successful order
     clearCart();
-    
+
     return orderId;
   };
 
-  const value = {
-    state,
-    addToCart,
-    addToCartWithQuantity,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    toggleCart,
-    openCart,
-    closeCart,
-    getTotalItems,
-    getTotalPrice,
-    checkout,
-  };
-
   return (
-    <CartContext.Provider value={value}>
+    <CartContext.Provider
+      value={{
+        items: state.items,
+        isOpen: state.isOpen,
+        addToCart,
+        addToCartWithQuantity,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        toggleCart,
+        openCart,
+        closeCart,
+        getTotalItems,
+        getTotalPrice,
+        checkout
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
 };
 
-import { useContext } from 'react';
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {
