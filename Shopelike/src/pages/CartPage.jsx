@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useReducer } from "react";
+import React, { useEffect, useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Plus, Minus, Trash2, ArrowLeft } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
@@ -14,7 +14,7 @@ const initialCartPageState = {
   selectedItems: [],
   redirectToReceipt: false,
   checkedOutItems: []
-};
+};  
 
 const cartPageReducer = (state, action) => {
   switch (action.type) {
@@ -25,7 +25,9 @@ const cartPageReducer = (state, action) => {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
     case 'TOGGLE_ITEM_SELECTION':
+      // eslint-disable-next-line no-case-declarations
       const itemId = action.payload;
+      // eslint-disable-next-line no-case-declarations
       const isSelected = state.selectedItems.includes(itemId);
       return { 
         ...state, 
@@ -44,7 +46,7 @@ const cartPageReducer = (state, action) => {
 
 export const CartPage = () => {
   const navigate = useNavigate();
-  const { state, dispatch, checkout } = useCart();
+  const { items, dispatch, checkout } = useCart();
   const [pageState, pageDispatch] = useReducer(cartPageReducer, initialCartPageState);
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -64,7 +66,7 @@ export const CartPage = () => {
 
   // Combine local and firebase cart items for display and summary
   const allCartItems = [
-    ...state.items.map(item => ({ ...item, _source: 'local' })),
+    ...items.map(item => ({ ...item, _source: 'local' })),
     ...pageState.firebaseCartItems.map(item => ({ ...item, _source: 'firebase' }))
   ];
 
@@ -277,7 +279,7 @@ export const CartPage = () => {
                     subtotal,
                     tax,
                     grandTotal: total
-                  });
+                  }, selectedItems);
                   
                   // Remove selected items from Firebase
                   const firebaseItemIds = selectedItems
@@ -345,6 +347,7 @@ export const CartPage = () => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const checkout = async (customerInfo, orderTotals, items) => {
   await addDoc(collection(db, "orders"), {
     customerInfo,
