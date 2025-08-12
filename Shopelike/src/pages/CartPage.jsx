@@ -52,10 +52,32 @@ export const CartPage = () => {
     const fetchCartItems = async () => {
       pageDispatch({ type: 'SET_LOADING', payload: true });
       try {
-        const items = await getCartItems();
+        // Implement retry logic for fetching cart items
+        let retries = 0;
+        const maxRetries = 3;
+        let items = [];
+        
+        while (retries < maxRetries) {
+          try {
+            items = await getCartItems();
+            break; // Success, exit the retry loop
+          } catch (fetchError) {
+            retries++;
+            console.warn(`Error fetching cart items (attempt ${retries}/${maxRetries}):`, fetchError);
+            if (retries >= maxRetries) {
+              console.error('Max retries reached for fetching cart items');
+              break;
+            }
+            // Wait before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries - 1)));
+          }
+        }
+        
         pageDispatch({ type: 'SET_FIREBASE_ITEMS', payload: items });
       } catch (error) {
-        console.error('Error fetching cart items:', error);
+        console.error('Error in cart items fetch process:', error);
+        // Set empty array to prevent UI issues
+        pageDispatch({ type: 'SET_FIREBASE_ITEMS', payload: [] });
       } finally {
         pageDispatch({ type: 'SET_LOADING', payload: false });
       }
