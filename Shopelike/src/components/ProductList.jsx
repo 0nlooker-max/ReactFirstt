@@ -60,6 +60,7 @@ export function ProductList() {
                 <th>Original Price</th>
                 <th>Discount</th>
                 <th>Badge</th>
+                <th>Quantity</th>
                 <th>Rating</th>
                 <th>Description</th>
                 <th>Details</th>
@@ -128,6 +129,13 @@ export function ProductList() {
                       {p.badge && (
                         <span className="badge bg-primary">{p.badge}</span>
                       )}
+                    </td>
+                    <td>
+                      {typeof p.quantity === "number" && !isNaN(p.quantity)
+                        ? p.quantity
+                        : p.quantity && !isNaN(Number(p.quantity))
+                        ? Number(p.quantity)
+                        : 0}
                     </td>
                     <td>
                       {typeof p.rating === "number" && !isNaN(p.rating)
