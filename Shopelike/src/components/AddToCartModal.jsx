@@ -34,23 +34,28 @@ export const AddToCartModal = ({ product, isOpen, onClose }) => {
 
   const handleAddToCart = async () => {
     // Add to cart using the context function with quantity
-    addToCartWithQuantity(product, quantity);
-    
-    // Save all product information to Firestore
-    await addCartItem({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      originalPrice: product.originalPrice,
-      quantity,
-      image: product.image || product.imageUrl,
-      seller: product.seller || 'Unknown Seller',
-      description: product.description,
-      category: product.category,
-      // Include any other product information available
-      ...(product.details && { details: product.details }),
-      ...(product.rating && { rating: product.rating }),
-    });
+    // Ensure we're using the correct Firestore document ID
+    if (product && product.id) {
+      addToCartWithQuantity(product, quantity);
+      
+      // Save all product information to Firestore
+      await addCartItem({
+        productId: product.id, // This should be the Firestore document ID
+        name: product.name,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        quantity,
+        image: product.image || product.imageUrl,
+        seller: product.seller || 'Unknown Seller',
+        description: product.description,
+        category: product.category,
+        ...(product.details && { details: product.details }),
+        ...(product.rating && { rating: product.rating }),
+        // Include any other product information available
+      });
+    } else {
+      console.error('Attempted to add product without ID to cart:', product);
+    }
     
     // Show confirmation and handle modal state
     modalDispatch({ type: 'SHOW_CONFIRMATION' });
