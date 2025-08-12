@@ -23,12 +23,22 @@ import {
   
   export async function getAllProducts() {
     const snapshot = await getDocs(productsCol);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map(doc => ({ 
+      id: doc.id, // Explicitly include the Firestore document ID
+      ...doc.data() 
+    }));
   }
   
   export async function updateProduct(id, data) {
+  try {
     const ref = doc(db, 'products', id);
     await updateDoc(ref, data);
+    return true;
+  } catch (error) {
+    console.error(`Error updating product ${id}:`, error);
+    // Rethrow the error so the caller can handle it
+    throw error;
+  }
   }
   
   export async function deleteProduct(id) {
@@ -36,11 +46,36 @@ import {
     await deleteDoc(ref);
   }
 
-  export async function getProduct(id) {
-  const ref = doc(db, 'products', id);
-  const snapshot = await getDocs(productsCol);
-  const match = snapshot.docs.find(doc => doc.id === id);
-  return match ? { id: match.id, ...match.data() } : null;
+  import { getDoc } from 'firebase/firestore';
+
+export async function getProduct(id) {
+  try {
+    if (!id) {
+      console.warn('Attempted to get product with undefined or null ID');
+      return null;
+    }
+    
+    const ref = doc(db, 'products', id);
+    const snapshot = await getDoc(ref);
+    
+    if (!snapshot.exists()) {
+      console.warn(`Product with ID ${id} not found. It may have been deleted or never existed.`);
+      return null;
+    }
+    
+    // Ensure numeric fields are returned as numbers
+    const data = snapshot.data();
+    return { 
+      id: snapshot.id, // Explicitly include the Firestore document ID
+      ...data,
+      quantity: data.quantity !== undefined ? Number(data.quantity) : 0,
+      price: data.price !== undefined ? Number(data.price) : 0
+    };
+  } catch (error) {
+    console.error(`Error fetching product ${id}:`, error);
+    // Return null instead of throwing to make the function more resilient
+    return null;
+  }
 }
 
 // Create an order in Firestore
@@ -85,8 +120,14 @@ export async function addCartItem(cartItem) {
 
 // Get all cart items from Firestore
 export async function getCartItems() {
-  const snapshot = await getDocs(cartItemsCol);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  try {
+    const snapshot = await getDocs(cartItemsCol);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error('Error fetching cart items:', error);
+    // Return empty array instead of failing completely
+    return [];
+  }
 }
 
 // Delete a cart item from Firestore
