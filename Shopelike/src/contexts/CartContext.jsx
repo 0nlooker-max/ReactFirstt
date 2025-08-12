@@ -151,129 +151,97 @@ export const CartProvider = ({ children }) => {
     }, 0);
   };
 
-  const checkout = async (formData, totals, items) => {
-    // Deduct product quantities in Firestore
-    const failedUpdates = [];
-    const successfulUpdates = [];
-    const missingProducts = [];
-    const validItems = [];
-    
-    console.log('Starting checkout process with items:', items.length);
-    
-    // First, validate all items and filter out missing products
-    for (const item of items) {
+ const checkout = async (formData, totals, items) => {
+  const failedUpdates = [];
+  const successfulUpdates = [];
+  const missingProducts = [];
+  const validItems = [];
+
+  console.log('Starting checkout process with items:', items.length);
+
+  for (const item of items) {
+    try {
+      if (!item || (!item.id && !item.productId)) {
+        console.warn('Invalid cart item found:', item);
+        continue;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const productId = item.productId || item.id; // fallback
+      console.log(`Validating product: ${productId}`);
+
+      const product = await getProduct(productId);
+
+      if (!product) {
+        console.warn(`Product not found in database: ${productId}`);
+        missingProducts.push(productId);
+        continue;
+      }
+
+      validItems.push({ item, product });
+      console.log(`Successfully validated product: ${productId} (${product.name})`);
+    } catch (error) {
+      console.error('Error validating product', error);
+    }
+  }
+
+  console.log(`Found ${validItems.length} valid products and ${missingProducts.length} missing products`);
+
+  for (const { item, product } of validItems) {
+    try {
+      const productQuantity = Number(product.quantity) || 0;
+      const itemQuantity = Number(item.quantity) || 0;
+      const productId = item.productId || item.id; // ✅ consistent
+
+      if (isNaN(productQuantity) || isNaN(itemQuantity)) {
+        console.error(`Invalid quantities for ${productId}`);
+        failedUpdates.push(productId);
+        continue;
+      }
+
+      const newQuantity = Math.max(0, productQuantity - itemQuantity);
+
       try {
-        if (!item || !item.id) {
-          console.warn('Found invalid item in cart without ID:', item);
-          continue;
-        }
-        
-        // Force a small delay between operations to avoid overwhelming Firestore
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        console.log(`Validating product: ${item.id}`);
-        const product = await getProduct(item.id);
-        
-        if (!product) {
-          console.warn(`Product not found in database: ${item.id}. It may have been deleted.`);
-          missingProducts.push(item.id);
-          continue;
-        }
-        
-        // Add to valid items list
-        validItems.push({item, product});
-        console.log(`Successfully validated product: ${item.id} (${product.name})`);
-      } catch (error) {
-        console.error(`Error validating product ${item.id}:`, error);
-        missingProducts.push(item.id);
+        await updateProduct(productId, { quantity: newQuantity });
+        successfulUpdates.push(productId);
+        console.log(`Updated ${productId} quantity to ${newQuantity}`);
+      } catch (err) {
+        console.error(`Update failed for ${productId}, retrying...`, err);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        await updateProduct(productId, { quantity: newQuantity });
+        successfulUpdates.push(productId);
       }
+    } catch (error) {
+      console.error('Error processing product', error);
     }
-    
-    console.log(`Found ${validItems.length} valid products and ${missingProducts.length} missing products`);
-    
-    if (validItems.length === 0) {
-      console.warn('No valid products found to update quantities. Proceeding with order anyway.');
-    } else {
-      // Process only valid items
-      for (const {item, product} of validItems) {
-        try {
-          // Product quantity should already be a number from our improved getProduct function
-          // But we'll still handle all possible scenarios
-          const productQuantity = Number(product.quantity) || 0;
-          const itemQuantity = Number(item.quantity) || 0;
-          
-          if (isNaN(productQuantity) || isNaN(itemQuantity)) {
-            console.error(`Invalid quantity values for product ${item.id}: product=${product.quantity}, item=${item.quantity}`);
-            failedUpdates.push(item.id);
-            continue;
-          }
-          
-          // Calculate new quantity and ensure it's not negative
-          const newQuantity = Math.max(0, productQuantity - itemQuantity);
-          console.log(`Updating product ${product.name} (${item.id}): ${productQuantity} - ${itemQuantity} = ${newQuantity}`);
-          
-          // Update the product quantity in Firestore with retry logic
-          try {
-            await updateProduct(item.id, { quantity: newQuantity });
-            successfulUpdates.push(item.id);
-            console.log(`Successfully updated quantity for product ${item.id} to ${newQuantity}`);
-          } catch (updateError) {
-            console.error(`Failed to update product ${item.id}, retrying once...`, updateError);
-            // Retry once after a short delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            try {
-              await updateProduct(item.id, { quantity: newQuantity });
-              successfulUpdates.push(item.id);
-              console.log(`Successfully updated quantity for product ${item.id} to ${newQuantity} on retry`);
-            } catch (retryError) {
-              console.error(`Retry failed for product ${item.id}`, retryError);
-              failedUpdates.push(item.id);
-            }
-          }
-        } catch (error) {
-          console.error(`Error processing item ${item.id}:`, error);
-          failedUpdates.push(item.id);
-        }
-      }
-    }
-    
-    console.log(`Checkout complete: ${successfulUpdates.length} products updated successfully, ${failedUpdates.length} failed, ${missingProducts.length} missing`);
-    
-    if (failedUpdates.length > 0) {
-      console.warn(`Failed to update quantities for ${failedUpdates.length} products. Order will proceed anyway.`);
-    }
-    
-    if (missingProducts.length > 0) {
-      console.warn(`${missingProducts.length} products were not found in the database. They may have been deleted.`);
-      console.warn('Missing product IDs:', missingProducts);
-    }
+  }
 
-    // Filter out missing products from the order items
-    const validOrderItems = items.filter(item => !missingProducts.includes(item.id));
-    
-    // Prepare order data with passed totals
-    const orderData = {
-      items: validOrderItems.map(({ id, name, price, quantity, image }) => ({
-        id,
-        name,
-        price,
-        quantity,
-        image
-      })),
-      subtotal: totals.subtotal,
-      tax: totals.tax,
-      grandTotal: totals.grandTotal,
-      customerInfo: formData
-    };
+  console.log(`Checkout complete: ${successfulUpdates.length} updated, ${failedUpdates.length} failed, ${missingProducts.length} missing`);
 
-    const orderId = await createOrder(orderData);
-    localStorage.setItem('lastOrderId', orderId);
+  const validOrderItems = items.filter(item => !missingProducts.includes(item.productId || item.id));
 
-    // Clear cart after successful order
-    clearCart();
-
-    return orderId;
+  const orderData = {
+    items: validOrderItems.map(({ productId, id, name, price, quantity, image }) => ({
+      id: productId || id,
+      name,
+      price,
+      quantity,
+      image
+    })),
+    subtotal: totals.subtotal,
+    tax: totals.tax,
+    grandTotal: totals.grandTotal,
+    customerInfo: formData
   };
+
+  const orderId = await createOrder(orderData);
+  localStorage.setItem('lastOrderId', orderId);
+
+  clearCart();
+  return orderId;
+};
+
 
   return (
     <CartContext.Provider
