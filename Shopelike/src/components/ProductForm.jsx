@@ -14,6 +14,7 @@ export function ProductForm({ existing, onSaved }) {
     rating: "",
     reviewCount: "",
     category: "",
+    quantity: "",
     seller: "",
     location: "",
     description: "",
@@ -36,6 +37,7 @@ export function ProductForm({ existing, onSaved }) {
         rating: existing.rating || "",
         reviewCount: existing.reviewCount || "",
         category: existing.category || "",
+        quantity: existing.quantity || "",
         seller: existing.seller || "",
         location: existing.location || "",
         description: existing.description || "",
@@ -52,6 +54,7 @@ export function ProductForm({ existing, onSaved }) {
         rating: "",
         reviewCount: "",
         category: "",
+        quantity: "",
         seller: "",
         location: "",
         description: "",
@@ -73,10 +76,22 @@ export function ProductForm({ existing, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Convert numeric fields to numbers before saving
+    const formData = {
+      ...form,
+      price: form.price ? Number(form.price) : 0,
+      originalPrice: form.originalPrice ? Number(form.originalPrice) : 0,
+      discount: form.discount ? Number(form.discount) : 0,
+      rating: form.rating ? Number(form.rating) : 0,
+      reviewCount: form.reviewCount ? Number(form.reviewCount) : 0,
+      quantity: form.quantity ? Number(form.quantity) : 0
+    };
+    
     if (existing) {
-      await updateProduct(existing.id, form);
+      await updateProduct(existing.id, formData);
     } else {
-      await createProduct(form);
+      await createProduct(formData);
     }
     onSaved();
     setForm({
@@ -89,6 +104,7 @@ export function ProductForm({ existing, onSaved }) {
       rating: "",
       reviewCount: "",
       category: "",
+      quantity:"",
       seller: "",
       location: "",
       description: "",
@@ -118,6 +134,7 @@ export function ProductForm({ existing, onSaved }) {
     ["discount", "Discount (%)"],
     ["price", "Price"],
     ["originalPrice", "Original Price"],
+    ["quantity", "Quantity"],
     ["rating", "Rating"],
     ["reviewCount", "Review Count"],
     ["seller", "Seller"],
@@ -140,6 +157,7 @@ export function ProductForm({ existing, onSaved }) {
                   "discount",
                   "rating",
                   "reviewCount",
+                  "quantity",
                 ].includes(field)
                   ? "number"
                   : "text"
@@ -149,10 +167,12 @@ export function ProductForm({ existing, onSaved }) {
               onChange={handleChange}
               className="w-full p-2 border rounded"
               required={field !== "badge"}
+              min={field === "quantity" ? "0" : undefined}
             />
           </div>
         ))}
       </div>
+
       <div className="field mt-4">
         <label htmlFor="category-select" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
         <div className="flex gap-2 items-center">
