@@ -44,7 +44,7 @@ export const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
             totalProducts={products.length}
           />
 
-          <ProductGrid products={products} onAddToCart={handleAddToCart} />
+          <ProductGrid products={products.filter(product => product.quantity > 0)} onAddToCart={handleAddToCart} />
         </div>
       </main>
 
