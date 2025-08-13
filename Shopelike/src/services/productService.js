@@ -129,10 +129,18 @@ export async function getCartItems() {
     return [];
   }
 }
+export async function deleteAllProducts() {
+  const querySnapshot = await getDocs(collection(db, 'products'));
 
+  const deletePromises = querySnapshot.docs.map((document) =>
+    deleteDoc(doc(db, 'products', document.id))
+  );
+  await Promise.all(deletePromises);
+  console.log("All products deleted successfully.");
+}
 // Delete a cart item from Firestore
-export async function deleteCartItem(id) {
-  const ref = doc(db, 'cartItems', id);
+export async function deleteCartItem() {
+  const ref = doc(db, 'products')
   await deleteDoc(ref);
 }
 
