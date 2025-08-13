@@ -2,7 +2,6 @@ import React, { useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, CreditCard, MapPin, User, Lock } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
-import { getAllProducts, updateProduct } from "../services/productService";
 
 // Checkout page reducer
 const initialCheckoutState = {
