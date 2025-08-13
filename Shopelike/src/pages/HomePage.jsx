@@ -5,6 +5,7 @@ import { FilterBar } from '../components/FilterBar';
 import { AddToCartModal } from '../components/AddToCartModal';
 import { useProducts } from '../hooks/useProduct';
 import "../assets/global.css";
+import {deleteAllProducts} from '../services/productService';
 
 export const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -37,12 +38,16 @@ export const HomePage = ({ isSidebarOpen, setIsSidebarOpen }) => {
       />
 
       <main className="flex-1 lg:ml-64 p-4 lg:p-6">
+        <button className='deleteall' onClick={deleteAllProducts}>
+          delete all
+        </button>
         <div className="max-w-7xl mx-auto">
           <FilterBar
             sortBy={sortBy}
             onSortChange={setSortBy}
             totalProducts={products.length}
           />
+
 
           <ProductGrid products={products.filter(product => product.quantity > 0)} onAddToCart={handleAddToCart} />
         </div>
